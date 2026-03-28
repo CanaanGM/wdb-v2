@@ -1,0 +1,19 @@
+services:
+  workoutlog.api:
+    container_name: workout_api
+    image: workoutlog.api
+    build:
+      context: .
+      dockerfile: WorkoutLog.Api/Dockerfile
+    environment:
+      ASPNETCORE_URLS: "https://+:443;http://+:80"
+      ASPNETCORE_Kestrel__Certificates__Default__Path: "/https/workoutlog.pfx"
+      ASPNETCORE_Kestrel__Certificates__Default__Password: "${HTTPS_CERT_PASSWORD:-WorkoutLogDev!2026}"
+    ports:
+      - "8080:80"
+      - "8081:443"
+    volumes:
+      - type: bind
+        source: "${USERPROFILE}/.aspnet/https"
+        target: /https
+        read_only: true

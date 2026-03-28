@@ -1,0 +1,38 @@
+# This is a generated file. Not intended for manual editing.
+services:
+  workoutlog.api:
+    build:
+      context: "C:\\Users\\me\\development\\WorkoutLog\\WorkoutLog"
+      dockerfile: "WorkoutLog.Api/Dockerfile"
+      target: "base"
+      args:
+        BUILD_CONFIGURATION: "Debug"
+    command: []
+    entrypoint:
+    - "/opt/JetBrains/RiderDebuggerTools/linux-x64/JetBrains.Debugger.Worker"
+    - "--runtimeconfig"
+    - "/opt/JetBrains/RiderDebuggerTools/JetBrains.Debugger.Worker.runtimeconfig.json"
+    - "--mode=server"
+    - "--frontend-port=57000"
+    - "--backend-port=57200"
+    - "--roslyn-worker-port=57404"
+    - "--timeout=60"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+      RIDER_DEBUGGER_LOG_DIR: "/var/opt/JetBrains/RiderDebuggerTools"
+      RESHARPER_LOG_CONF: "/etc/opt/JetBrains/RiderDebuggerTools/backend-log.xml"
+    image: "workoutlog.api:dev"
+    ports:
+    - "127.0.0.1:57004:57000"
+    - "127.0.0.1:57204:57200"
+    - "127.0.0.1:57404:57404"
+    volumes:
+    - "C:\\Users\\me\\development\\WorkoutLog\\WorkoutLog\\WorkoutLog.Api:/app:rw"
+    - "C:\\Users\\me\\development\\WorkoutLog\\WorkoutLog:/src:rw"
+    - "C:\\Users\\me\\.nuget\\packages:/home/app/.nuget/packages"
+    - "C:\\Users\\me\\AppData\\Local\\JetBrains\\RiderRemoteDebugger\\2025.3.4\\Linux64:/opt/JetBrains/RiderDebuggerTools"
+    - "C:\\Program Files\\JetBrains\\JetBrains Rider 2025.1.4\\bin\\backend-log.xml:/etc/opt/JetBrains/RiderDebuggerTools/backend-log.xml"
+    - "C:\\Users\\me\\AppData\\Local\\JetBrains\\Rider2025.3\\log\\DebuggerWorker\\\
+      JetBrains.Debugger.Worker.2026_3_28_09_24_55:/var/opt/JetBrains/RiderDebuggerTools:rw"
+    working_dir: "/app"
