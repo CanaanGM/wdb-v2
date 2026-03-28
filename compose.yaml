@@ -1,19 +1,64 @@
 services:
-  workoutlog.api:
+  database:
+    container_name: workout_db
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - workoutlog_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U workoutlog -d workoutlog" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  migrator:
+    image: workoutlog.migrator
+    pull_policy: never
+    build:
+      context: .
+      dockerfile: Infrastructure/Dockerfile.migrator
+    profiles:
+      - migrations
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      WORKOUTLOG_DB_CONNECTION: "Host=database;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+    command:
+      - database
+      - update
+      - --project
+      - Infrastructure/Infrastructure.csproj
+      - --startup-project
+      - Api/Api.csproj
+
+  api:
     container_name: workout_api
     image: workoutlog.api
     build:
       context: .
-      dockerfile: WorkoutLog.Api/Dockerfile
+      dockerfile: Api/Dockerfile
+    depends_on:
+      database:
+        condition: service_healthy
     environment:
       ASPNETCORE_URLS: "https://+:443;http://+:80"
       ASPNETCORE_Kestrel__Certificates__Default__Path: "/https/workoutlog.pfx"
-      ASPNETCORE_Kestrel__Certificates__Default__Password: "${HTTPS_CERT_PASSWORD:-WorkoutLogDev!2026}"
+      ASPNETCORE_Kestrel__Certificates__Default__Password: "${HTTPS_CERT_PASSWORD}"
+      ConnectionStrings__WorkoutLogDatabase: "Host=database;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
     ports:
-      - "8080:80"
-      - "8081:443"
+      - "${API_HTTP_PORT:-8080}:80"
+      - "${API_HTTPS_PORT:-8081}:443"
     volumes:
       - type: bind
         source: "${USERPROFILE}/.aspnet/https"
         target: /https
         read_only: true
+
+volumes:
+  workoutlog_postgres_data:

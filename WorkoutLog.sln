@@ -1,11 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkoutLog.Api", "WorkoutLog.Api\WorkoutLog.Api.csproj", "{CD0DBF47-5F83-41A5-945A-A0B79FD3465C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "Api\Api.csproj", "{CD0DBF47-5F83-41A5-945A-A0B79FD3465C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9505FA69-E41F-456F-832A-8C611C1140B9}"
 	ProjectSection(SolutionItems) = preProject
+		.env.example = .env.example
 		compose.yaml = compose.yaml
+		Directory.Packages.props = Directory.Packages.props
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{FE6C28FC-85A9-4274-966E-CB4CB53B236B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{20F410A7-C93E-4EE7-840C-1573D7DC7471}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,5 +23,13 @@ Global
 		{CD0DBF47-5F83-41A5-945A-A0B79FD3465C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CD0DBF47-5F83-41A5-945A-A0B79FD3465C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CD0DBF47-5F83-41A5-945A-A0B79FD3465C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE6C28FC-85A9-4274-966E-CB4CB53B236B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE6C28FC-85A9-4274-966E-CB4CB53B236B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE6C28FC-85A9-4274-966E-CB4CB53B236B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE6C28FC-85A9-4274-966E-CB4CB53B236B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20F410A7-C93E-4EE7-840C-1573D7DC7471}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20F410A7-C93E-4EE7-840C-1573D7DC7471}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20F410A7-C93E-4EE7-840C-1573D7DC7471}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20F410A7-C93E-4EE7-840C-1573D7DC7471}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
