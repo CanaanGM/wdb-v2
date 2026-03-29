@@ -1,24 +1,21 @@
-using Infrastructure.Persistence.Entities;
+using Domain.Exercises;
+using Domain.Muscles;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence;
 
 public sealed class WorkoutLogDbContext(DbContextOptions<WorkoutLogDbContext> options) : DbContext(options)
 {
-    public DbSet<MigrationProbe> MigrationProbes => Set<MigrationProbe>();
+    public DbSet<Exercise> Exercises => Set<Exercise>();
+
+    public DbSet<ExerciseHowTo> ExerciseHowTos => Set<ExerciseHowTo>();
+
+    public DbSet<ExerciseMuscle> ExerciseMuscles => Set<ExerciseMuscle>();
+
+    public DbSet<Muscle> Muscles => Set<Muscle>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<MigrationProbe>(entity =>
-        {
-            entity.ToTable("migration_probes");
-            entity.HasKey(x => x.Id);
-            entity.Property(x => x.Name)
-                .HasMaxLength(100)
-                .IsRequired();
-            entity.Property(x => x.CreatedAtUtc)
-                .HasColumnName("created_at_utc")
-                .HasDefaultValueSql("now()");
-        });
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(WorkoutLogDbContext).Assembly);
     }
 }

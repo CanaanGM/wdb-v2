@@ -37,6 +37,28 @@ services:
       - --startup-project
       - Api/Api.csproj
 
+  migrator-down:
+    image: workoutlog.migrator
+    pull_policy: never
+    build:
+      context: .
+      dockerfile: Infrastructure/Dockerfile.migrator
+    profiles:
+      - migrations
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      WORKOUTLOG_DB_CONNECTION: "Host=database;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+    command:
+      - database
+      - update
+      - "0"
+      - --project
+      - Infrastructure/Infrastructure.csproj
+      - --startup-project
+      - Api/Api.csproj
+
   api:
     container_name: workout_api
     image: workoutlog.api
