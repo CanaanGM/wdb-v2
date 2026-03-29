@@ -15,6 +15,42 @@
 - Input validation happens at the API boundary through request contract attributes.
 - Unhandled exceptions are returned as RFC7807 problem details with trace IDs.
 
+### MCP Server
+
+- MCP endpoint is hosted by the API at `https://localhost:8081/mcp` (or `http://localhost:8080/mcp`).
+- Exposed read-only tools:
+  - `search_exercises`
+  - `get_exercise_by_id`
+  - `get_muscles`
+  - `search_muscles`
+  - `get_muscles_by_group`
+
+### MCP Setup For LM Studio
+
+1. Start the API so the MCP endpoint is live:
+
+```powershell
+docker compose up -d api
+```
+
+2. In LM Studio, open `Program` -> `Install` -> `Edit mcp.json`.
+
+3. Add this server entry (for local dev, use `http` to avoid cert trust issues):
+
+```json
+{
+  "mcpServers": {
+    "workoutlog": {
+      "url": "http://localhost:8080/mcp"
+    }
+  }
+}
+```
+
+4. Save `mcp.json`, then reload MCP servers (or restart LM Studio).
+
+5. In the chat/tool UI, enable the `workoutlog` server and use tools like `search_exercises`, `get_exercise_by_id`, `get_muscles`, `search_muscles`, and `get_muscles_by_group`.
+
 ### Persistence Layout
 
 - Feature-based persistence config lives under:

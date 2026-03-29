@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <PackageReference Include="MediatR" />
+        <PackageReference Include="ModelContextProtocol.AspNetCore" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
