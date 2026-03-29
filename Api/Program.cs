@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Api.Application.Cqrs;
 using Api.Common.Errors;
 using Api.Common.Mcp;
+using Api.Features.Equipments;
 using Api.Features.Exercises;
 using Api.Features.Muscles;
 using Infrastructure;
@@ -42,6 +43,7 @@ builder.Services.AddProblemDetails(options =>
 });
 builder.Services.AddCqrs();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddEquipmentFeature();
 builder.Services.AddExerciseFeature();
 builder.Services.AddMuscleFeature();
 builder.Services

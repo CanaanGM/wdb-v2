@@ -24,6 +24,9 @@
   - `get_muscles`
   - `search_muscles`
   - `get_muscles_by_group`
+  - `get_equipments`
+  - `search_equipments`
+  - `get_equipment_by_name`
 
 ### MCP Setup For LM Studio
 
@@ -49,11 +52,20 @@ docker compose up -d api
 
 4. Save `mcp.json`, then reload MCP servers (or restart LM Studio).
 
-5. In the chat/tool UI, enable the `workoutlog` server and use tools like `search_exercises`, `get_exercise_by_id`, `get_muscles`, `search_muscles`, and `get_muscles_by_group`.
+5. In the chat/tool UI, enable the `workoutlog` server and use tools like:
+   - `search_exercises`
+   - `get_exercise_by_id`
+   - `get_muscles`
+   - `search_muscles`
+   - `get_muscles_by_group`
+   - `get_equipments`
+   - `search_equipments`
+   - `get_equipment_by_name`
 
 ### Persistence Layout
 
 - Feature-based persistence config lives under:
+  - `Infrastructure/Persistence/Features/Equipments/Configurations`
   - `Infrastructure/Persistence/Features/Exercises/Configurations`
   - `Infrastructure/Persistence/Features/Muscles/Configurations`
 - Shared cross-feature persistence code (if needed) lives under:
@@ -214,6 +226,71 @@ Invoke-RestMethod -Method Post `
 # Get one exercise by id
 Invoke-RestMethod -Method Get `
   -Uri "https://localhost:8081/api/exercises/1" `
+  -SkipCertificateCheck
+```
+
+### Equipment API quick test (PowerShell)
+
+```powershell
+# Create one equipment
+$equipmentBody = @'
+{
+  "name": "barbell",
+  "description": "Standard olympic barbell.",
+  "howTo": "Use collars before loading plates.",
+  "weightKg": 20
+}
+'@
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/equipments" `
+  -SkipCertificateCheck `
+  -ContentType "application/json" `
+  -Body $equipmentBody
+```
+
+```powershell
+# Bulk create equipments
+$equipmentBulkBody = @'
+[
+  {
+    "name": "dumbbell",
+    "description": "Single-hand free weight.",
+    "weightKg": 12.5
+  },
+  {
+    "name": "kettlebell",
+    "description": "Ballistic training weight.",
+    "weightKg": 16
+  }
+]
+'@
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/equipments/bulk" `
+  -SkipCertificateCheck `
+  -ContentType "application/json" `
+  -Body $equipmentBulkBody
+```
+
+```powershell
+# Get all equipments
+Invoke-RestMethod -Method Get `
+  -Uri "https://localhost:8081/api/equipments" `
+  -SkipCertificateCheck
+```
+
+```powershell
+# Search equipments by term
+Invoke-RestMethod -Method Get `
+  -Uri "https://localhost:8081/api/equipments/search/bell" `
+  -SkipCertificateCheck
+```
+
+```powershell
+# Get one equipment by unique name
+Invoke-RestMethod -Method Get `
+  -Uri "https://localhost:8081/api/equipments/barbell" `
   -SkipCertificateCheck
 ```
 

@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using Api.Application.Contracts.Querying;
+using Api.Features.Equipments.Contracts;
+using Api.Features.Equipments.Services;
 using Api.Features.Exercises.Contracts;
 using Api.Features.Exercises.Services;
 using Api.Features.Muscles.Contracts;
@@ -11,7 +13,8 @@ namespace Api.Common.Mcp;
 [McpServerToolType]
 public sealed class WorkoutLogReadTools(
     IExercisesService exercisesService,
-    IMusclesService musclesService)
+    IMusclesService musclesService,
+    IEquipmentsService equipmentsService)
 {
     [McpServerTool(Name = "search_exercises", ReadOnly = true, OpenWorld = false)]
     [Description("Search exercises with pagination and optional filters.")]
@@ -71,5 +74,30 @@ public sealed class WorkoutLogReadTools(
         CancellationToken cancellationToken = default)
     {
         return await musclesService.GetByGroupAsync(groupName, cancellationToken);
+    }
+
+    [McpServerTool(Name = "get_equipments", ReadOnly = true, OpenWorld = false)]
+    [Description("Get all equipment items.")]
+    public async Task<List<EquipmentResponse>> GetEquipmentsAsync(CancellationToken cancellationToken = default)
+    {
+        return await equipmentsService.GetAllAsync(cancellationToken);
+    }
+
+    [McpServerTool(Name = "search_equipments", ReadOnly = true, OpenWorld = false)]
+    [Description("Search equipment by text fragment.")]
+    public async Task<List<EquipmentResponse>> SearchEquipmentsAsync(
+        [Description("Search term.")] string searchTerm,
+        CancellationToken cancellationToken = default)
+    {
+        return await equipmentsService.SearchAsync(searchTerm, cancellationToken);
+    }
+
+    [McpServerTool(Name = "get_equipment_by_name", ReadOnly = true, OpenWorld = false)]
+    [Description("Get one equipment item by its unique name.")]
+    public async Task<EquipmentResponse?> GetEquipmentByNameAsync(
+        [Description("Equipment name.")] string name,
+        CancellationToken cancellationToken = default)
+    {
+        return await equipmentsService.GetByNameAsync(name, cancellationToken);
     }
 }

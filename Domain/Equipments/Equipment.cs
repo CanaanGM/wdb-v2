@@ -1,10 +1,10 @@
-namespace Domain.Exercises;
+using Domain.Exercises;
 
-public sealed class Exercise
+namespace Domain.Equipments;
+
+public sealed class Equipment
 {
     public int Id { get; set; }
-
-    public int Difficulty { get; set; }
 
     public string Name { get; set; } = string.Empty;
 
@@ -12,9 +12,9 @@ public sealed class Exercise
 
     public string? HowTo { get; set; }
 
-    public ICollection<ExerciseHowTo> HowTos { get; set; } = new List<ExerciseHowTo>();
+    public double WeightKg { get; set; }
 
-    public ICollection<ExerciseMuscle> ExerciseMuscles { get; set; } = new List<ExerciseMuscle>();
+    public DateTime CreatedAtUtc { get; set; }
 
     public ICollection<ExerciseEquipment> ExerciseEquipments { get; set; } = new List<ExerciseEquipment>();
 }
