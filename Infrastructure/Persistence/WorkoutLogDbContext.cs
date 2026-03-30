@@ -1,6 +1,8 @@
 using Domain.Equipments;
 using Domain.Exercises;
 using Domain.Muscles;
+using Domain.WorkoutBlocks;
+using Domain.Workouts;
 using Infrastructure.Persistence.Features.Auth.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -24,6 +26,16 @@ public sealed class WorkoutLogDbContext(DbContextOptions<WorkoutLogDbContext> op
     public DbSet<Muscle> Muscles => Set<Muscle>();
 
     public DbSet<Equipment> Equipments => Set<Equipment>();
+
+    public DbSet<WorkoutSession> WorkoutSessions => Set<WorkoutSession>();
+
+    public DbSet<WorkoutEntry> WorkoutEntries => Set<WorkoutEntry>();
+
+    public DbSet<UserExerciseStat> UserExerciseStats => Set<UserExerciseStat>();
+
+    public DbSet<WorkoutBlock> WorkoutBlocks => Set<WorkoutBlock>();
+
+    public DbSet<WorkoutBlockExercise> WorkoutBlockExercises => Set<WorkoutBlockExercise>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

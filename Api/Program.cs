@@ -6,6 +6,9 @@ using Api.Common.Mcp;
 using Api.Features.Equipments;
 using Api.Features.Exercises;
 using Api.Features.Muscles;
+using Api.Features.WorkoutBlocks;
+using Api.Features.Workouts;
+using Api.Features.UserExerciseStats;
 using Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -48,6 +51,9 @@ builder.Services.AddAuthFeature(builder.Configuration);
 builder.Services.AddEquipmentFeature();
 builder.Services.AddExerciseFeature();
 builder.Services.AddMuscleFeature();
+builder.Services.AddUserExerciseStatsFeature();
+builder.Services.AddWorkoutBlockFeature();
+builder.Services.AddWorkoutFeature();
 builder.Services
     .AddMcpServer()
     .WithHttpTransport()

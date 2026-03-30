@@ -27,6 +27,11 @@
   - `get_equipments`
   - `search_equipments`
   - `get_equipment_by_name`
+  - `search_workouts`
+  - `get_workout_by_id`
+  - `search_workout_blocks`
+  - `get_workout_block_by_id`
+  - `search_user_exercise_stats`
 
 ### MCP Setup For LM Studio
 
@@ -61,6 +66,11 @@ docker compose up -d api
    - `get_equipments`
    - `search_equipments`
    - `get_equipment_by_name`
+   - `search_workouts` (Development-only, requires `userId` input)
+   - `get_workout_by_id` (Development-only, requires `userId` input)
+   - `search_workout_blocks` (Development-only, requires `userId` input)
+   - `get_workout_block_by_id` (Development-only, requires `userId` input)
+   - `search_user_exercise_stats` (Development-only, requires `userId` input)
 
 ### Persistence Layout
 
@@ -69,6 +79,8 @@ docker compose up -d api
   - `Infrastructure/Persistence/Features/Equipments/Configurations`
   - `Infrastructure/Persistence/Features/Exercises/Configurations`
   - `Infrastructure/Persistence/Features/Muscles/Configurations`
+  - `Infrastructure/Persistence/Features/WorkoutBlocks/Configurations`
+  - `Infrastructure/Persistence/Features/Workouts/Configurations`
 - Shared cross-feature persistence code (if needed) lives under:
   - `Infrastructure/Persistence/Shared`
 - Migrations remain under:
@@ -431,4 +443,276 @@ Invoke-RestMethod -Method Post `
   -SkipCertificateCheck `
   -ContentType "application/json" `
   -Body $bulkBody
+```
+
+### Workout API quick test (PowerShell)
+
+```powershell
+# requires a bearer token from /api/auth/login
+$token = $loginResponse.accessToken
+```
+
+```powershell
+# Create one workout
+$createWorkoutBody = @'
+{
+  "feeling": "great",
+  "durationInMinutes": 75,
+  "mood": 8,
+  "notes": "push day",
+  "performedAtUtc": "2026-03-30T18:45:00Z",
+  "entries": [
+    {
+      "exerciseId": 1,
+      "orderNumber": 1,
+      "repetitions": 12,
+      "mood": 8,
+      "weightUsedKg": 60,
+      "rateOfPerceivedExertion": 7,
+      "kcalBurned": 55
+    }
+  ]
+}
+'@
+
+$createdWorkout = Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/workouts" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -ContentType "application/json" `
+  -Body $createWorkoutBody
+```
+
+```powershell
+# Search workouts (paged)
+$searchWorkoutsBody = @'
+{
+  "pageNumber": 1,
+  "pageSize": 20,
+  "search": "push",
+  "minMood": 6,
+  "maxMood": 10
+}
+'@
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/workouts/search" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -ContentType "application/json" `
+  -Body $searchWorkoutsBody
+```
+
+```powershell
+# Get recent workouts (last 48 hours)
+Invoke-RestMethod -Method Get `
+  -Uri "https://localhost:8081/api/workouts/recent?hours=48" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" }
+```
+
+```powershell
+# Bulk create workouts
+$bulkWorkoutsBody = @'
+[
+  {
+    "feeling": "good",
+    "durationInMinutes": 45,
+    "mood": 7,
+    "entries": [
+      {
+        "exerciseId": 1,
+        "orderNumber": 1,
+        "repetitions": 10,
+        "mood": 7,
+        "weightUsedKg": 50,
+        "rateOfPerceivedExertion": 6,
+        "kcalBurned": 40
+      }
+    ]
+  },
+  {
+    "feeling": "cardio",
+    "durationInMinutes": 30,
+    "mood": 6,
+    "entries": [
+      {
+        "exerciseId": 2,
+        "orderNumber": 1,
+        "timerInSeconds": 1200,
+        "mood": 6,
+        "weightUsedKg": 0,
+        "rateOfPerceivedExertion": 5,
+        "kcalBurned": 120
+      }
+    ]
+  }
+]
+'@
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/workouts/bulk" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -ContentType "application/json" `
+  -Body $bulkWorkoutsBody
+```
+
+```powershell
+# Update a workout (replace payload)
+$updateWorkoutBody = @'
+{
+  "feeling": "solid",
+  "durationInMinutes": 80,
+  "mood": 9,
+  "notes": "updated",
+  "entries": [
+    {
+      "exerciseId": 1,
+      "orderNumber": 1,
+      "repetitions": 15,
+      "mood": 9,
+      "weightUsedKg": 62.5,
+      "rateOfPerceivedExertion": 8,
+      "kcalBurned": 60
+    }
+  ]
+}
+'@
+
+Invoke-RestMethod -Method Put `
+  -Uri "https://localhost:8081/api/workouts/$($createdWorkout.id)" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -ContentType "application/json" `
+  -Body $updateWorkoutBody
+```
+
+```powershell
+# Delete workout
+Invoke-RestMethod -Method Delete `
+  -Uri "https://localhost:8081/api/workouts/$($createdWorkout.id)" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" }
+```
+
+### Workout Blocks API quick test (PowerShell)
+
+```powershell
+# Create workout block
+$createBlockBody = @'
+{
+  "name": "upper strength block",
+  "sets": 4,
+  "restInSeconds": 90,
+  "orderNumber": 1,
+  "instructions": "controlled tempo",
+  "blockExercises": [
+    {
+      "exerciseId": 1,
+      "orderNumber": 1,
+      "repetitions": 8
+    },
+    {
+      "exerciseId": 2,
+      "orderNumber": 2,
+      "repetitions": 10
+    }
+  ]
+}
+'@
+
+$createdBlock = Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/workoutblocks" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -ContentType "application/json" `
+  -Body $createBlockBody
+```
+
+```powershell
+# Search workout blocks
+$searchBlocksBody = @'
+{
+  "pageNumber": 1,
+  "pageSize": 20,
+  "search": "upper"
+}
+'@
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/workoutblocks/search" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -ContentType "application/json" `
+  -Body $searchBlocksBody
+```
+
+```powershell
+# Bulk create workout blocks
+$bulkBlocksBody = @'
+[
+  {
+    "name": "lower block",
+    "sets": 3,
+    "restInSeconds": 120,
+    "orderNumber": 1,
+    "blockExercises": [
+      { "exerciseId": 1, "orderNumber": 1, "repetitions": 12 }
+    ]
+  },
+  {
+    "name": "conditioning block",
+    "sets": 5,
+    "restInSeconds": 60,
+    "orderNumber": 2,
+    "blockExercises": [
+      { "exerciseId": 2, "orderNumber": 1, "timerInSeconds": 300 }
+    ]
+  }
+]
+'@
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/workoutblocks/bulk" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -ContentType "application/json" `
+  -Body $bulkBlocksBody
+```
+
+```powershell
+# Delete workout block
+Invoke-RestMethod -Method Delete `
+  -Uri "https://localhost:8081/api/workoutblocks/$($createdBlock.id)" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" }
+```
+
+### User Exercise Stats API quick test (PowerShell)
+
+```powershell
+# Search user exercise stats
+$searchStatsBody = @'
+{
+  "pageNumber": 1,
+  "pageSize": 20,
+  "search": "squat"
+}
+'@
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/userexercisestats/search" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -ContentType "application/json" `
+  -Body $searchStatsBody
+```
+
+```powershell
+# Get stat by exercise id
+Invoke-RestMethod -Method Get `
+  -Uri "https://localhost:8081/api/userexercisestats/1" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" }
 ```
