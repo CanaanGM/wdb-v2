@@ -1,0 +1,47 @@
+meta {
+  name: Create Workouts Bulk
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/workouts/bulk
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "entries": [
+      {
+        "heartRateAvg": 142,
+        "notes": "Felt solid",
+        "restInSeconds": 90,
+        "timerInSeconds": 50,
+        "kcalBurned": 85,
+        "exerciseId": 1,
+        "orderNumber": 1,
+        "incline": null,
+        "mood": 8,
+        "repetitions": 12,
+        "distanceInMeters": null,
+        "speed": null,
+        "weightUsedKg": 42.5,
+        "rateOfPerceivedExertion": 8
+      }
+    ],
+    "performedAtUtc": "2026-03-29T07:30:00Z",
+    "notes": "Bulk insert sample workout.",
+    "mood": 8,
+    "feeling": "great",
+    "durationInMinutes": 50
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

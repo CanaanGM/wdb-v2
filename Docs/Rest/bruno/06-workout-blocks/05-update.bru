@@ -1,0 +1,39 @@
+meta {
+  name: Update Workout Block
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/api/workoutblocks/{{workoutBlockId}}
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "blockExercises": [
+      {
+        "repetitions": 12,
+        "exerciseId": 1,
+        "instructions": "Pause one second at bottom.",
+        "orderNumber": 1,
+        "timerInSeconds": null,
+        "distanceInMeters": null
+      }
+    ],
+    "restInSeconds": 100,
+    "orderNumber": 1,
+    "sets": 5,
+    "instructions": "Updated progression and rest.",
+    "name": "Push Day Block A (Updated)"
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

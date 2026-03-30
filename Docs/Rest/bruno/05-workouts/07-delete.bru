@@ -1,0 +1,15 @@
+meta {
+  name: Delete Workout
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{baseUrl}}/api/workouts/{{workoutId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

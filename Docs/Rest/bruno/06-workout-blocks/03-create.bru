@@ -1,0 +1,39 @@
+meta {
+  name: Create Workout Block
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/workoutblocks
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "blockExercises": [
+      {
+        "repetitions": 10,
+        "exerciseId": 1,
+        "instructions": "Controlled eccentric phase.",
+        "orderNumber": 1,
+        "timerInSeconds": null,
+        "distanceInMeters": null
+      }
+    ],
+    "restInSeconds": 120,
+    "orderNumber": 1,
+    "sets": 4,
+    "instructions": "Complete in sequence with full rest between sets.",
+    "name": "Push Day Block A"
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

@@ -1,0 +1,27 @@
+meta {
+  name: Search Workout Blocks
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/workoutblocks/search
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "search": "push",
+    "pageSize": 20,
+    "pageNumber": 1
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

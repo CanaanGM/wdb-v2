@@ -1,0 +1,27 @@
+meta {
+  name: Search Exercises
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/exercises/search
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "search": "squat",
+    "pageSize": 20,
+    "muscleName": "Rectus Femoris",
+    "pageNumber": 1,
+    "muscleGroup": "quadriceps",
+    "difficulty": 3,
+    "isPrimary": true
+  }
+}

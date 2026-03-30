@@ -1,0 +1,36 @@
+meta {
+  name: Create Exercises Bulk
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/exercises/bulk
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "difficulty": 2,
+    "howTo": "Sit back and keep knees tracking over toes.",
+    "exerciseMuscles": [
+      {
+        "muscleName": "Rectus Femoris",
+        "isPrimary": true
+      }
+    ],
+    "name": "Bodyweight Squat",
+    "description": "Lower body movement",
+    "howTos": [
+      {
+        "url": "https://example.com/squat-video",
+        "name": "Video"
+      }
+    ]
+  }
+}

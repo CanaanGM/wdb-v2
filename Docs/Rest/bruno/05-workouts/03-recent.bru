@@ -1,0 +1,15 @@
+meta {
+  name: Get Recent Workouts
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/workouts/recent?hours={{recentHours}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

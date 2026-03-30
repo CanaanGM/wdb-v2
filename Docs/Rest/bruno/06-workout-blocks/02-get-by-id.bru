@@ -1,0 +1,15 @@
+meta {
+  name: Get Workout Block By Id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/workoutblocks/{{workoutBlockId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

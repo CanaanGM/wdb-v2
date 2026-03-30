@@ -1,0 +1,39 @@
+meta {
+  name: Create Workout Blocks Bulk
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/workoutblocks/bulk
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "blockExercises": [
+      {
+        "repetitions": 15,
+        "exerciseId": 1,
+        "instructions": "Steady effort",
+        "orderNumber": 1,
+        "timerInSeconds": null,
+        "distanceInMeters": null
+      }
+    ],
+    "restInSeconds": 90,
+    "orderNumber": 2,
+    "sets": 3,
+    "instructions": "Keep transitions short.",
+    "name": "Conditioning Block"
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

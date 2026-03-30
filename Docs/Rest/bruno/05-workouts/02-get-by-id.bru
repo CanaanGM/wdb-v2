@@ -1,0 +1,15 @@
+meta {
+  name: Get Workout By Id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/workouts/{{workoutId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

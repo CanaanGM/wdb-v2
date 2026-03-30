@@ -1,0 +1,900 @@
+{
+  "item": [
+    {
+      "item": [
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/register",
+            "method": "POST",
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"demo.user@example.com\",\r\n  \"username\": \"demo.user\",\r\n  \"password\": \"DemoPass123\"\r\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let data = {};",
+                  "try { data = pm.response.json(); } catch (e) {}",
+                  "if (data.accessToken) { pm.collectionVariables.set(\"accessToken\", data.accessToken); }"
+                ]
+              }
+            }
+          ],
+          "name": "Register"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "method": "POST",
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "{\r\n  \"identifier\": \"demo.user@example.com\",\r\n  \"password\": \"DemoPass123\"\r\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let data = {};",
+                  "try { data = pm.response.json(); } catch (e) {}",
+                  "if (data.accessToken) { pm.collectionVariables.set(\"accessToken\", data.accessToken); }"
+                ]
+              }
+            }
+          ],
+          "name": "Login"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/refresh",
+            "method": "POST"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let data = {};",
+                  "try { data = pm.response.json(); } catch (e) {}",
+                  "if (data.accessToken) { pm.collectionVariables.set(\"accessToken\", data.accessToken); }"
+                ]
+              }
+            }
+          ],
+          "name": "Refresh Token"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/logout",
+            "method": "POST"
+          },
+          "name": "Logout"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/me",
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "value": "{{accessToken}}",
+                  "key": "token",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "name": "Get Current User"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/forgot-password",
+            "method": "POST",
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "{\r\n  \"identifier\": \"demo.user@example.com\"\r\n}"
+            }
+          },
+          "name": "Forgot Password"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/reset-password",
+            "method": "POST",
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "{\r\n  \"token\": \"REPLACE_WITH_RESET_TOKEN\",\r\n  \"identifier\": \"demo.user@example.com\",\r\n  \"newPassword\": \"DemoPass456\"\r\n}"
+            }
+          },
+          "name": "Reset Password"
+        }
+      ],
+      "name": "Auth"
+    },
+    {
+      "item": [
+        {
+          "response": [],
+          "request": {
+            "header": [],
+            "url": "{{baseUrl}}/api/muscles",
+            "method": "GET"
+          },
+          "name": "Get All Muscles"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [],
+            "url": "{{baseUrl}}/api/muscles/search/{{muscleSearchTerm}}",
+            "method": "GET"
+          },
+          "name": "Search Muscles"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [],
+            "url": "{{baseUrl}}/api/muscles/{{muscleGroupName}}",
+            "method": "GET"
+          },
+          "name": "Get Muscles By Group"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/muscles/bulk",
+            "method": "POST",
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "[\r\n  {\r\n    \"wikiPageUrl\": \"https://en.wikipedia.org/wiki/Gastrocnemius_muscle\",\r\n    \"muscleGroup\": \"calves\",\r\n    \"function\": \"Plantar flexes the ankle and flexes the knee.\",\r\n    \"name\": \"Gastrocnemius\"\r\n  },\r\n  {\r\n    \"wikiPageUrl\": \"https://en.wikipedia.org/wiki/Rectus_femoris_muscle\",\r\n    \"muscleGroup\": \"quadriceps\",\r\n    \"function\": \"Flexes the hip and extends the knee.\",\r\n    \"name\": \"Rectus Femoris\"\r\n  }\r\n]"
+            }
+          },
+          "name": "Create Muscles Bulk"
+        }
+      ],
+      "name": "Muscles"
+    },
+    {
+      "item": [
+        {
+          "response": [],
+          "request": {
+            "header": [],
+            "url": "{{baseUrl}}/api/equipments",
+            "method": "GET"
+          },
+          "name": "Get All Equipments"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [],
+            "url": "{{baseUrl}}/api/equipments/search/{{equipmentSearchTerm}}",
+            "method": "GET"
+          },
+          "name": "Search Equipments"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [],
+            "url": "{{baseUrl}}/api/equipments/{{equipmentName}}",
+            "method": "GET"
+          },
+          "name": "Get Equipment By Name"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/equipments",
+            "method": "POST",
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "{\r\n  \"description\": \"Adjustable dumbbell pair\",\r\n  \"howTo\": \"Choose the target weight before each set.\",\r\n  \"weightKg\": 20,\r\n  \"name\": \"Dumbbell\"\r\n}"
+            }
+          },
+          "name": "Create Equipment"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/equipments/bulk",
+            "method": "POST",
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "[\r\n  {\r\n    \"description\": \"Cast iron kettlebell\",\r\n    \"howTo\": \"Hold with both hands for swings.\",\r\n    \"weightKg\": 16,\r\n    \"name\": \"Kettlebell\"\r\n  },\r\n  {\r\n    \"description\": \"Olympic barbell\",\r\n    \"howTo\": \"Use collars before lifts.\",\r\n    \"weightKg\": 20,\r\n    \"name\": \"Barbell\"\r\n  }\r\n]"
+            }
+          },
+          "name": "Create Equipments Bulk"
+        }
+      ],
+      "name": "Equipments"
+    },
+    {
+      "item": [
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/exercises/search",
+            "method": "POST",
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "{\r\n  \"search\": \"squat\",\r\n  \"pageSize\": 20,\r\n  \"muscleName\": \"Rectus Femoris\",\r\n  \"pageNumber\": 1,\r\n  \"muscleGroup\": \"quadriceps\",\r\n  \"difficulty\": 3,\r\n  \"isPrimary\": true\r\n}"
+            }
+          },
+          "name": "Search Exercises"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [],
+            "url": "{{baseUrl}}/api/exercises/{{exerciseId}}",
+            "method": "GET"
+          },
+          "name": "Get Exercise By Id"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/exercises",
+            "method": "POST",
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "{\r\n  \"difficulty\": 2,\r\n  \"howTo\": \"Keep your core tight and descend with control.\",\r\n  \"exerciseMuscles\": [\r\n    {\r\n      \"muscleName\": \"Rectus Femoris\",\r\n      \"isPrimary\": false\r\n    }\r\n  ],\r\n  \"name\": \"Push-up\",\r\n  \"description\": \"Upper body bodyweight movement\",\r\n  \"howTos\": [\r\n    {\r\n      \"url\": \"https://example.com/push-up-video\",\r\n      \"name\": \"Video\"\r\n    },\r\n    {\r\n      \"url\": \"https://example.com/push-up-guide\",\r\n      \"name\": \"Written guide\"\r\n    }\r\n  ]\r\n}"
+            }
+          },
+          "name": "Create Exercise"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/exercises/bulk",
+            "method": "POST",
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "{\r\n  \"difficulty\": 2,\r\n  \"howTo\": \"Sit back and keep knees tracking over toes.\",\r\n  \"exerciseMuscles\": [\r\n    {\r\n      \"muscleName\": \"Rectus Femoris\",\r\n      \"isPrimary\": true\r\n    }\r\n  ],\r\n  \"name\": \"Bodyweight Squat\",\r\n  \"description\": \"Lower body movement\",\r\n  \"howTos\": [\r\n    {\r\n      \"url\": \"https://example.com/squat-video\",\r\n      \"name\": \"Video\"\r\n    }\r\n  ]\r\n}"
+            }
+          },
+          "name": "Create Exercises Bulk"
+        }
+      ],
+      "name": "Exercises"
+    },
+    {
+      "item": [
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/workouts/search",
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "value": "{{accessToken}}",
+                  "key": "token",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "{\r\n  \"maxMood\": 8,\r\n  \"minMood\": 4,\r\n  \"exerciseId\": 1,\r\n  \"fromUtc\": \"2026-03-01T00:00:00Z\",\r\n  \"search\": \"leg day\",\r\n  \"pageNumber\": 1,\r\n  \"toUtc\": \"2026-03-30T23:59:59Z\",\r\n  \"pageSize\": 20\r\n}"
+            }
+          },
+          "name": "Search Workouts"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [],
+            "url": "{{baseUrl}}/api/workouts/{{workoutId}}",
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "value": "{{accessToken}}",
+                  "key": "token",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "name": "Get Workout By Id"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [],
+            "url": "{{baseUrl}}/api/workouts/recent?hours={{recentHours}}",
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "value": "{{accessToken}}",
+                  "key": "token",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "name": "Get Recent Workouts"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/workouts",
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "value": "{{accessToken}}",
+                  "key": "token",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "{\r\n  \"entries\": [\r\n    {\r\n      \"heartRateAvg\": 138,\r\n      \"notes\": \"Controlled tempo\",\r\n      \"restInSeconds\": 120,\r\n      \"timerInSeconds\": 60,\r\n      \"kcalBurned\": 70,\r\n      \"exerciseId\": 1,\r\n      \"orderNumber\": 1,\r\n      \"incline\": null,\r\n      \"mood\": 7,\r\n      \"repetitions\": 10,\r\n      \"distanceInMeters\": null,\r\n      \"speed\": null,\r\n      \"weightUsedKg\": 40,\r\n      \"rateOfPerceivedExertion\": 7.5\r\n    }\r\n  ],\r\n  \"performedAtUtc\": \"2026-03-30T08:00:00Z\",\r\n  \"notes\": \"Strong leg day session.\",\r\n  \"mood\": 7,\r\n  \"feeling\": \"good\",\r\n  \"durationInMinutes\": 45\r\n}"
+            }
+          },
+          "name": "Create Workout"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/workouts/bulk",
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "value": "{{accessToken}}",
+                  "key": "token",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "{\r\n  \"entries\": [\r\n    {\r\n      \"heartRateAvg\": 142,\r\n      \"notes\": \"Felt solid\",\r\n      \"restInSeconds\": 90,\r\n      \"timerInSeconds\": 50,\r\n      \"kcalBurned\": 85,\r\n      \"exerciseId\": 1,\r\n      \"orderNumber\": 1,\r\n      \"incline\": null,\r\n      \"mood\": 8,\r\n      \"repetitions\": 12,\r\n      \"distanceInMeters\": null,\r\n      \"speed\": null,\r\n      \"weightUsedKg\": 42.5,\r\n      \"rateOfPerceivedExertion\": 8\r\n    }\r\n  ],\r\n  \"performedAtUtc\": \"2026-03-29T07:30:00Z\",\r\n  \"notes\": \"Bulk insert sample workout.\",\r\n  \"mood\": 8,\r\n  \"feeling\": \"great\",\r\n  \"durationInMinutes\": 50\r\n}"
+            }
+          },
+          "name": "Create Workouts Bulk"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/workouts/{{workoutId}}",
+            "method": "PUT",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "value": "{{accessToken}}",
+                  "key": "token",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "{\r\n  \"entries\": [\r\n    {\r\n      \"heartRateAvg\": 144,\r\n      \"notes\": \"Added one extra rep\",\r\n      \"restInSeconds\": 90,\r\n      \"timerInSeconds\": 55,\r\n      \"kcalBurned\": 90,\r\n      \"exerciseId\": 1,\r\n      \"orderNumber\": 1,\r\n      \"incline\": null,\r\n      \"mood\": 8,\r\n      \"repetitions\": 12,\r\n      \"distanceInMeters\": null,\r\n      \"speed\": null,\r\n      \"weightUsedKg\": 42.5,\r\n      \"rateOfPerceivedExertion\": 8.2\r\n    }\r\n  ],\r\n  \"performedAtUtc\": \"2026-03-30T08:00:00Z\",\r\n  \"notes\": \"Updated after adding a final set.\",\r\n  \"mood\": 9,\r\n  \"feeling\": \"excellent\",\r\n  \"durationInMinutes\": 48\r\n}"
+            }
+          },
+          "name": "Update Workout"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [],
+            "url": "{{baseUrl}}/api/workouts/{{workoutId}}",
+            "method": "DELETE",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "value": "{{accessToken}}",
+                  "key": "token",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "name": "Delete Workout"
+        }
+      ],
+      "name": "Workouts"
+    },
+    {
+      "item": [
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/workoutblocks/search",
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "value": "{{accessToken}}",
+                  "key": "token",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "{\r\n  \"search\": \"push\",\r\n  \"pageSize\": 20,\r\n  \"pageNumber\": 1\r\n}"
+            }
+          },
+          "name": "Search Workout Blocks"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [],
+            "url": "{{baseUrl}}/api/workoutblocks/{{workoutBlockId}}",
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "value": "{{accessToken}}",
+                  "key": "token",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "name": "Get Workout Block By Id"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/workoutblocks",
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "value": "{{accessToken}}",
+                  "key": "token",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "{\r\n  \"blockExercises\": [\r\n    {\r\n      \"repetitions\": 10,\r\n      \"exerciseId\": 1,\r\n      \"instructions\": \"Controlled eccentric phase.\",\r\n      \"orderNumber\": 1,\r\n      \"timerInSeconds\": null,\r\n      \"distanceInMeters\": null\r\n    }\r\n  ],\r\n  \"restInSeconds\": 120,\r\n  \"orderNumber\": 1,\r\n  \"sets\": 4,\r\n  \"instructions\": \"Complete in sequence with full rest between sets.\",\r\n  \"name\": \"Push Day Block A\"\r\n}"
+            }
+          },
+          "name": "Create Workout Block"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/workoutblocks/bulk",
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "value": "{{accessToken}}",
+                  "key": "token",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "{\r\n  \"blockExercises\": [\r\n    {\r\n      \"repetitions\": 15,\r\n      \"exerciseId\": 1,\r\n      \"instructions\": \"Steady effort\",\r\n      \"orderNumber\": 1,\r\n      \"timerInSeconds\": null,\r\n      \"distanceInMeters\": null\r\n    }\r\n  ],\r\n  \"restInSeconds\": 90,\r\n  \"orderNumber\": 2,\r\n  \"sets\": 3,\r\n  \"instructions\": \"Keep transitions short.\",\r\n  \"name\": \"Conditioning Block\"\r\n}"
+            }
+          },
+          "name": "Create Workout Blocks Bulk"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/workoutblocks/{{workoutBlockId}}",
+            "method": "PUT",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "value": "{{accessToken}}",
+                  "key": "token",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "{\r\n  \"blockExercises\": [\r\n    {\r\n      \"repetitions\": 12,\r\n      \"exerciseId\": 1,\r\n      \"instructions\": \"Pause one second at bottom.\",\r\n      \"orderNumber\": 1,\r\n      \"timerInSeconds\": null,\r\n      \"distanceInMeters\": null\r\n    }\r\n  ],\r\n  \"restInSeconds\": 100,\r\n  \"orderNumber\": 1,\r\n  \"sets\": 5,\r\n  \"instructions\": \"Updated progression and rest.\",\r\n  \"name\": \"Push Day Block A (Updated)\"\r\n}"
+            }
+          },
+          "name": "Update Workout Block"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [],
+            "url": "{{baseUrl}}/api/workoutblocks/{{workoutBlockId}}",
+            "method": "DELETE",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "value": "{{accessToken}}",
+                  "key": "token",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "name": "Delete Workout Block"
+        }
+      ],
+      "name": "Workout Blocks"
+    },
+    {
+      "item": [
+        {
+          "response": [],
+          "request": {
+            "header": [
+              {
+                "value": "application/json",
+                "key": "Content-Type",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/userexercisestats/search",
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "value": "{{accessToken}}",
+                  "key": "token",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "mode": "raw",
+              "raw": "{\r\n  \"search\": \"push\",\r\n  \"pageSize\": 20,\r\n  \"pageNumber\": 1,\r\n  \"exerciseId\": 1\r\n}"
+            }
+          },
+          "name": "Search User Exercise Stats"
+        },
+        {
+          "response": [],
+          "request": {
+            "header": [],
+            "url": "{{baseUrl}}/api/userexercisestats/{{exerciseId}}",
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "value": "{{accessToken}}",
+                  "key": "token",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "name": "Get User Exercise Stat By Exercise Id"
+        }
+      ],
+      "name": "User Exercise Stats"
+    },
+    {
+      "item": [
+        {
+          "response": [],
+          "request": {
+            "header": [],
+            "url": "{{baseUrl}}/openapi/v1.json",
+            "method": "GET"
+          },
+          "name": "OpenAPI Document"
+        }
+      ],
+      "name": "System"
+    }
+  ],
+  "variable": [
+    {
+      "value": "https://localhost:6001",
+      "key": "baseUrl"
+    },
+    {
+      "value": "",
+      "key": "accessToken"
+    },
+    {
+      "value": "1",
+      "key": "exerciseId"
+    },
+    {
+      "value": "Dumbbell",
+      "key": "equipmentName"
+    },
+    {
+      "value": "bell",
+      "key": "equipmentSearchTerm"
+    },
+    {
+      "value": "quadriceps",
+      "key": "muscleGroupName"
+    },
+    {
+      "value": "quad",
+      "key": "muscleSearchTerm"
+    },
+    {
+      "value": "1",
+      "key": "workoutId"
+    },
+    {
+      "value": "1",
+      "key": "workoutBlockId"
+    },
+    {
+      "value": "24",
+      "key": "recentHours"
+    }
+  ],
+  "info": {
+    "_postman_id": "195aa5fb-9905-4717-aaeb-1795f74720b1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Generated from current API controllers. Includes sample payloads and auth-ready requests.",
+    "name": "WorkoutLog API"
+  }
+}

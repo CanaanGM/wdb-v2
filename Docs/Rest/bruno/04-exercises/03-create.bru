@@ -1,0 +1,40 @@
+meta {
+  name: Create Exercise
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/exercises
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "difficulty": 2,
+    "howTo": "Keep your core tight and descend with control.",
+    "exerciseMuscles": [
+      {
+        "muscleName": "Rectus Femoris",
+        "isPrimary": false
+      }
+    ],
+    "name": "Push-up",
+    "description": "Upper body bodyweight movement",
+    "howTos": [
+      {
+        "url": "https://example.com/push-up-video",
+        "name": "Video"
+      },
+      {
+        "url": "https://example.com/push-up-guide",
+        "name": "Written guide"
+      }
+    ]
+  }
+}

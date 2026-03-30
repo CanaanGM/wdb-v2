@@ -1,0 +1,32 @@
+meta {
+  name: Search Workouts
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/workouts/search
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "maxMood": 8,
+    "minMood": 4,
+    "exerciseId": 1,
+    "fromUtc": "2026-03-01T00:00:00Z",
+    "search": "leg day",
+    "pageNumber": 1,
+    "toUtc": "2026-03-30T23:59:59Z",
+    "pageSize": 20
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

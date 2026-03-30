@@ -1,0 +1,11 @@
+meta {
+  name: Search Equipments
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/equipments/search/{{equipmentSearchTerm}}
+  body: none
+  auth: none
+}

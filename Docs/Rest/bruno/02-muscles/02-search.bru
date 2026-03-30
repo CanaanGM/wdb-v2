@@ -1,0 +1,11 @@
+meta {
+  name: Search Muscles
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/muscles/search/{{muscleSearchTerm}}
+  body: none
+  auth: none
+}

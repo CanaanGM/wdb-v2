@@ -1,0 +1,47 @@
+meta {
+  name: Update Workout
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{baseUrl}}/api/workouts/{{workoutId}}
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "entries": [
+      {
+        "heartRateAvg": 144,
+        "notes": "Added one extra rep",
+        "restInSeconds": 90,
+        "timerInSeconds": 55,
+        "kcalBurned": 90,
+        "exerciseId": 1,
+        "orderNumber": 1,
+        "incline": null,
+        "mood": 8,
+        "repetitions": 12,
+        "distanceInMeters": null,
+        "speed": null,
+        "weightUsedKg": 42.5,
+        "rateOfPerceivedExertion": 8.2
+      }
+    ],
+    "performedAtUtc": "2026-03-30T08:00:00Z",
+    "notes": "Updated after adding a final set.",
+    "mood": 9,
+    "feeling": "excellent",
+    "durationInMinutes": 48
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

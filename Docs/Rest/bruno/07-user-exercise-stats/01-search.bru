@@ -1,0 +1,28 @@
+meta {
+  name: Search User Exercise Stats
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/userexercisestats/search
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "search": "push",
+    "pageSize": 20,
+    "pageNumber": 1,
+    "exerciseId": 1
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

@@ -1,0 +1,47 @@
+meta {
+  name: Create Workout
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/workouts
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "entries": [
+      {
+        "heartRateAvg": 138,
+        "notes": "Controlled tempo",
+        "restInSeconds": 120,
+        "timerInSeconds": 60,
+        "kcalBurned": 70,
+        "exerciseId": 1,
+        "orderNumber": 1,
+        "incline": null,
+        "mood": 7,
+        "repetitions": 10,
+        "distanceInMeters": null,
+        "speed": null,
+        "weightUsedKg": 40,
+        "rateOfPerceivedExertion": 7.5
+      }
+    ],
+    "performedAtUtc": "2026-03-30T08:00:00Z",
+    "notes": "Strong leg day session.",
+    "mood": 7,
+    "feeling": "good",
+    "durationInMinutes": 45
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

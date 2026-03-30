@@ -1,0 +1,24 @@
+meta {
+  name: Create Equipment
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/equipments
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "description": "Adjustable dumbbell pair",
+    "howTo": "Choose the target weight before each set.",
+    "weightKg": 20,
+    "name": "Dumbbell"
+  }
+}
