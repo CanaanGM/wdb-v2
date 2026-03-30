@@ -65,6 +65,7 @@ docker compose up -d api
 ### Persistence Layout
 
 - Feature-based persistence config lives under:
+  - `Infrastructure/Persistence/Features/Auth/Configurations`
   - `Infrastructure/Persistence/Features/Equipments/Configurations`
   - `Infrastructure/Persistence/Features/Exercises/Configurations`
   - `Infrastructure/Persistence/Features/Muscles/Configurations`
@@ -134,6 +135,113 @@ docker compose up -d api
 ```powershell
 # stop everything
 docker compose down
+```
+
+### Auth environment variables
+
+- `AUTH_JWT_ISSUER`
+- `AUTH_JWT_AUDIENCE`
+- `AUTH_JWT_SECRET`
+- `AUTH_JWT_ACCESS_TOKEN_MINUTES`
+- `AUTH_REFRESH_COOKIE_NAME`
+- `AUTH_REFRESH_DAYS`
+- `AUTH_REFRESH_COOKIE_PATH`
+- `AUTH_BOOTSTRAP_ADMIN_ENABLED`
+- `AUTH_BOOTSTRAP_ADMIN_EMAIL`
+- `AUTH_BOOTSTRAP_ADMIN_USERNAME`
+- `AUTH_BOOTSTRAP_ADMIN_PASSWORD`
+
+### Auth API quick test (PowerShell)
+
+```powershell
+$session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+
+# Register
+$registerBody = @'
+{
+  "username": "demo.user",
+  "email": "demo.user@example.com",
+  "password": "DemoPass123"
+}
+'@
+
+$registerResponse = Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/auth/register" `
+  -SkipCertificateCheck `
+  -WebSession $session `
+  -ContentType "application/json" `
+  -Body $registerBody
+```
+
+```powershell
+# Login (identifier can be email or username)
+$loginBody = @'
+{
+  "identifier": "demo.user@example.com",
+  "password": "DemoPass123"
+}
+'@
+
+$loginResponse = Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/auth/login" `
+  -SkipCertificateCheck `
+  -WebSession $session `
+  -ContentType "application/json" `
+  -Body $loginBody
+```
+
+```powershell
+# Me (requires bearer access token)
+Invoke-RestMethod -Method Get `
+  -Uri "https://localhost:8081/api/auth/me" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $($loginResponse.accessToken)" }
+```
+
+```powershell
+# Refresh access token (uses HttpOnly refresh cookie from $session)
+$refreshResponse = Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/auth/refresh" `
+  -SkipCertificateCheck `
+  -WebSession $session
+```
+
+```powershell
+# Forgot password (in Development, response includes debugResetToken when user exists)
+$forgotBody = @'
+{
+  "identifier": "demo.user@example.com"
+}
+'@
+
+$forgotResponse = Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/auth/forgot-password" `
+  -SkipCertificateCheck `
+  -ContentType "application/json" `
+  -Body $forgotBody
+```
+
+```powershell
+# Reset password (use token from forgotResponse.debugResetToken)
+$resetBody = @{
+  identifier = "demo.user@example.com"
+  token = $forgotResponse.debugResetToken
+  newPassword = "DemoPass456"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/auth/reset-password" `
+  -SkipCertificateCheck `
+  -ContentType "application/json" `
+  -Body $resetBody
+```
+
+```powershell
+# Logout (revokes refresh cookie token)
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/auth/logout" `
+  -SkipCertificateCheck `
+  -WebSession $session
 ```
 
 ### Muscle API quick test (PowerShell)

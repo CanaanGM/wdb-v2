@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Api.Application.Cqrs;
+using Api.Features.Auth;
 using Api.Common.Errors;
 using Api.Common.Mcp;
 using Api.Features.Equipments;
@@ -43,6 +44,7 @@ builder.Services.AddProblemDetails(options =>
 });
 builder.Services.AddCqrs();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddAuthFeature(builder.Configuration);
 builder.Services.AddEquipmentFeature();
 builder.Services.AddExerciseFeature();
 builder.Services.AddMuscleFeature();
@@ -67,6 +69,7 @@ app.UseWhen(
     branch => branch.UseHttpsRedirection());
 
 app.UseCors();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
