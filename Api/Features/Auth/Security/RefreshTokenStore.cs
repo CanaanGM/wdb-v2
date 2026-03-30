@@ -43,9 +43,34 @@ public sealed class RefreshTokenStore(
         var now = DateTime.UtcNow;
 
         var currentSession = await dbContext.RefreshSessions
-            .SingleOrDefaultAsync(x => x.TokenHash == currentTokenHash, cancellationToken);
+            .AsNoTracking()
+            .Where(x => x.TokenHash == currentTokenHash)
+            .Select(x => new
+            {
+                x.Id,
+                x.UserId,
+                x.ExpiresAtUtc,
+                x.RevokedAtUtc,
+                x.ReplacedByHash
+            })
+            .SingleOrDefaultAsync(cancellationToken);
 
-        if (currentSession is null || currentSession.RevokedAtUtc.HasValue || currentSession.ExpiresAtUtc <= now)
+        if (currentSession is null)
+        {
+            return RefreshTokenRotationResult.Failed();
+        }
+
+        if (currentSession.RevokedAtUtc.HasValue)
+        {
+            if (!string.IsNullOrWhiteSpace(currentSession.ReplacedByHash))
+            {
+                await RevokeAllForUserAsync(currentSession.UserId, cancellationToken);
+            }
+
+            return RefreshTokenRotationResult.Failed();
+        }
+
+        if (currentSession.ExpiresAtUtc <= now)
         {
             return RefreshTokenRotationResult.Failed();
         }
@@ -54,8 +79,18 @@ public sealed class RefreshTokenStore(
         var newTokenHash = RefreshTokenHasher.Hash(newToken);
         var newTokenExpiresAtUtc = now.AddDays(_refreshTokenOptions.RefreshTokenDays);
 
-        currentSession.RevokedAtUtc = now;
-        currentSession.ReplacedByHash = newTokenHash;
+        var updatedRows = await dbContext.RefreshSessions
+            .Where(x => x.Id == currentSession.Id && x.RevokedAtUtc == null && x.ExpiresAtUtc > now)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(x => x.RevokedAtUtc, now)
+                    .SetProperty(x => x.ReplacedByHash, newTokenHash),
+                cancellationToken);
+
+        if (updatedRows == 0)
+        {
+            return RefreshTokenRotationResult.Failed();
+        }
 
         dbContext.RefreshSessions.Add(new RefreshSession
         {
@@ -78,16 +113,24 @@ public sealed class RefreshTokenStore(
     public async Task RevokeAsync(string token, CancellationToken cancellationToken)
     {
         var tokenHash = RefreshTokenHasher.Hash(token);
-        var refreshSession = await dbContext.RefreshSessions
-            .SingleOrDefaultAsync(x => x.TokenHash == tokenHash, cancellationToken);
+        var now = DateTime.UtcNow;
 
-        if (refreshSession is null || refreshSession.RevokedAtUtc.HasValue)
-        {
-            return;
-        }
+        await dbContext.RefreshSessions
+            .Where(x => x.TokenHash == tokenHash && x.RevokedAtUtc == null)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(x => x.RevokedAtUtc, now),
+                cancellationToken);
+    }
 
-        refreshSession.RevokedAtUtc = DateTime.UtcNow;
-        await dbContext.SaveChangesAsync(cancellationToken);
+    public async Task RevokeAllForUserAsync(int userId, CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+
+        await dbContext.RefreshSessions
+            .Where(x => x.UserId == userId && x.RevokedAtUtc == null)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(x => x.RevokedAtUtc, now),
+                cancellationToken);
     }
 
     private static string GenerateToken()

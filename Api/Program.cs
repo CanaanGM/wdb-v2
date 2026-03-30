@@ -47,7 +47,7 @@ builder.Services.AddProblemDetails(options =>
 });
 builder.Services.AddCqrs();
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddAuthFeature(builder.Configuration);
+builder.Services.AddAuthFeature(builder.Configuration, builder.Environment);
 builder.Services.AddEquipmentFeature();
 builder.Services.AddExerciseFeature();
 builder.Services.AddMuscleFeature();

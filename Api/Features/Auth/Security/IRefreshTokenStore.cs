@@ -9,6 +9,8 @@ public interface IRefreshTokenStore
     Task<RefreshTokenRotationResult> RotateAsync(string currentToken, CancellationToken cancellationToken);
 
     Task RevokeAsync(string token, CancellationToken cancellationToken);
+
+    Task RevokeAllForUserAsync(int userId, CancellationToken cancellationToken);
 }
 
 public sealed class RefreshTokenRotationResult

@@ -22,9 +22,11 @@ public sealed class AuthController(
     ISender sender,
     ICurrentUserAccessor currentUserAccessor,
     IHostEnvironment hostEnvironment,
-    IOptions<RefreshTokenOptions> refreshTokenOptions) : ControllerBase
+    IOptions<RefreshTokenOptions> refreshTokenOptions,
+    IOptions<PasswordResetOptions> passwordResetOptions) : ControllerBase
 {
     private readonly RefreshTokenOptions _refreshTokenOptions = refreshTokenOptions.Value;
+    private readonly PasswordResetOptions _passwordResetOptions = passwordResetOptions.Value;
 
     [HttpPost("register")]
     [AllowAnonymous]
@@ -111,8 +113,11 @@ public sealed class AuthController(
         [FromBody] ForgotPasswordRequest request,
         CancellationToken cancellationToken)
     {
+        var includeDebugResetToken = hostEnvironment.IsDevelopment()
+            && _passwordResetOptions.IncludeDebugResetToken;
+
         var result = await sender.Send(
-            new ForgotPasswordCommand(request, hostEnvironment.IsDevelopment()),
+            new ForgotPasswordCommand(request, includeDebugResetToken),
             cancellationToken);
 
         return Ok(result.Response);

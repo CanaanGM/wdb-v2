@@ -9,6 +9,7 @@ namespace Api.Features.Auth.Services;
 
 public sealed class AuthService(
     UserManager<AuthUser> userManager,
+    SignInManager<AuthUser> signInManager,
     RoleManager<AuthRole> roleManager,
     ITokenService tokenService,
     IRefreshTokenStore refreshTokenStore) : IAuthService
@@ -39,7 +40,8 @@ public sealed class AuthService(
         var addToRoleResult = await userManager.AddToRoleAsync(user, AuthRoles.User);
         if (!addToRoleResult.Succeeded)
         {
-            return AuthCommandResult.ValidationError(string.Join("; ", addToRoleResult.Errors.Select(x => x.Description)));
+            throw new InvalidOperationException(
+                $"Failed to assign '{AuthRoles.User}' role during registration: {string.Join("; ", addToRoleResult.Errors.Select(x => x.Description))}");
         }
 
         var roles = await userManager.GetRolesAsync(user);
@@ -59,8 +61,11 @@ public sealed class AuthService(
             return AuthCommandResult.Unauthorized(GenericAuthFailureMessage);
         }
 
-        var isPasswordValid = await userManager.CheckPasswordAsync(user, request.Password);
-        if (!isPasswordValid)
+        var signInResult = await signInManager.CheckPasswordSignInAsync(
+            user,
+            request.Password,
+            lockoutOnFailure: true);
+        if (!signInResult.Succeeded)
         {
             return AuthCommandResult.Unauthorized(GenericAuthFailureMessage);
         }
@@ -170,6 +175,15 @@ public sealed class AuthService(
             return ResetPasswordCommandResult.ValidationError(
                 $"{GenericResetPasswordFailureMessage} {string.Join("; ", resetResult.Errors.Select(x => x.Description))}");
         }
+
+        var rotateStampResult = await userManager.UpdateSecurityStampAsync(user);
+        if (!rotateStampResult.Succeeded)
+        {
+            throw new InvalidOperationException(
+                $"Password reset succeeded but rotating security stamp failed: {string.Join("; ", rotateStampResult.Errors.Select(x => x.Description))}");
+        }
+
+        await refreshTokenStore.RevokeAllForUserAsync(user.Id, cancellationToken);
 
         return ResetPasswordCommandResult.Success();
     }

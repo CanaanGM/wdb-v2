@@ -80,6 +80,7 @@ services:
       Auth__RefreshToken__CookieName: "${AUTH_REFRESH_COOKIE_NAME}"
       Auth__RefreshToken__RefreshTokenDays: "${AUTH_REFRESH_DAYS}"
       Auth__RefreshToken__CookiePath: "${AUTH_REFRESH_COOKIE_PATH}"
+      Auth__PasswordReset__IncludeDebugResetToken: "${AUTH_PASSWORD_RESET_INCLUDE_DEBUG_TOKEN}"
       Auth__BootstrapAdmin__Enabled: "${AUTH_BOOTSTRAP_ADMIN_ENABLED}"
       Auth__BootstrapAdmin__Email: "${AUTH_BOOTSTRAP_ADMIN_EMAIL}"
       Auth__BootstrapAdmin__Username: "${AUTH_BOOTSTRAP_ADMIN_USERNAME}"

@@ -158,10 +158,13 @@ docker compose down
 - `AUTH_REFRESH_COOKIE_NAME`
 - `AUTH_REFRESH_DAYS`
 - `AUTH_REFRESH_COOKIE_PATH`
+- `AUTH_PASSWORD_RESET_INCLUDE_DEBUG_TOKEN`
 - `AUTH_BOOTSTRAP_ADMIN_ENABLED`
 - `AUTH_BOOTSTRAP_ADMIN_EMAIL`
 - `AUTH_BOOTSTRAP_ADMIN_USERNAME`
 - `AUTH_BOOTSTRAP_ADMIN_PASSWORD`
+
+`AUTH_JWT_SECRET` must be replaced with a strong custom value. The API will fail startup in all environments (including Development) if the placeholder value is still used.
 
 ### Auth API quick test (PowerShell)
 
@@ -219,7 +222,9 @@ $refreshResponse = Invoke-RestMethod -Method Post `
 ```
 
 ```powershell
-# Forgot password (in Development, response includes debugResetToken when user exists)
+# Forgot password (debugResetToken is returned only when BOTH conditions are true:
+# 1) ASPNETCORE_ENVIRONMENT=Development
+# 2) AUTH_PASSWORD_RESET_INCLUDE_DEBUG_TOKEN=true)
 $forgotBody = @'
 {
   "identifier": "demo.user@example.com"

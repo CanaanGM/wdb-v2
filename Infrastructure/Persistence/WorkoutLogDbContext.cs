@@ -113,7 +113,8 @@ public sealed class WorkoutLogDbContext(DbContextOptions<WorkoutLogDbContext> op
                 .IsUnique();
 
             builder.HasIndex(x => x.NormalizedEmail)
-                .HasDatabaseName("IX_auth_user_normalized_email");
+                .HasDatabaseName("IX_auth_user_normalized_email")
+                .IsUnique();
         });
 
         modelBuilder.Entity<AuthRole>(builder =>
