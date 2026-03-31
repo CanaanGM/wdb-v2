@@ -1,0 +1,28 @@
+meta {
+  name: Search My Plan Enrollments
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/myplans/enrollments/search
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "status": "active",
+    "search": "savage",
+    "pageNumber": 1,
+    "pageSize": 20
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

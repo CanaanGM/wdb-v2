@@ -14,5 +14,8 @@ public sealed class GetExercisesRequest : PagedFilterRequest
     [MaxLength(100)]
     public string? MuscleGroup { get; set; }
 
+    [MaxLength(100)]
+    public string? TrainingTypeName { get; set; }
+
     public bool? IsPrimary { get; set; }
 }

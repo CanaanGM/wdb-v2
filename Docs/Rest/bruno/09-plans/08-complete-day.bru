@@ -1,0 +1,27 @@
+meta {
+  name: Complete Plan Day
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/myplans/enrollments/{{planEnrollmentId}}/days/complete
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "localDate": "{{planFromLocalDate}}",
+    "linkedWorkoutSessionId": 1,
+    "notes": "Completed as prescribed."
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

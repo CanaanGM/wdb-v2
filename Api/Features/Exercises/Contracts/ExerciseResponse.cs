@@ -12,6 +12,8 @@ public sealed class ExerciseResponse
 
     public int Difficulty { get; init; }
 
+    public List<string> TrainingTypes { get; init; } = [];
+
     public List<ExerciseHowToResponse> HowTos { get; init; } = [];
 
     public List<ExerciseMuscleResponse> ExerciseMuscles { get; init; } = [];

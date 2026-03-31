@@ -6,8 +6,11 @@ using Api.Common.Mcp;
 using Api.Features.Equipments;
 using Api.Features.Exercises;
 using Api.Features.Muscles;
+using Api.Features.Plans;
+using Api.Features.TrainingTypes;
 using Api.Features.WorkoutBlocks;
 using Api.Features.Workouts;
+using Api.Features.Measurements;
 using Api.Features.UserExerciseStats;
 using Infrastructure;
 
@@ -51,7 +54,10 @@ builder.Services.AddAuthFeature(builder.Configuration, builder.Environment);
 builder.Services.AddEquipmentFeature();
 builder.Services.AddExerciseFeature();
 builder.Services.AddMuscleFeature();
-builder.Services.AddUserExerciseStatsFeature();
+builder.Services.AddTrainingTypesFeature();
+builder.Services.AddMeasurementsFeature();
+builder.Services.AddPlansFeature();
+builder.Services.AddUserExerciseStatsFeature(builder.Configuration);
 builder.Services.AddWorkoutBlockFeature();
 builder.Services.AddWorkoutFeature();
 builder.Services

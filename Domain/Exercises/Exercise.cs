@@ -1,3 +1,5 @@
+using Domain.TrainingTypes;
+
 namespace Domain.Exercises;
 
 public sealed class Exercise
@@ -17,4 +19,6 @@ public sealed class Exercise
     public ICollection<ExerciseMuscle> ExerciseMuscles { get; set; } = new List<ExerciseMuscle>();
 
     public ICollection<ExerciseEquipment> ExerciseEquipments { get; set; } = new List<ExerciseEquipment>();
+
+    public ICollection<ExerciseTrainingType> ExerciseTrainingTypes { get; set; } = new List<ExerciseTrainingType>();
 }

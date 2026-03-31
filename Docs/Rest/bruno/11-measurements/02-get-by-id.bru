@@ -1,0 +1,15 @@
+meta {
+  name: Get Measurement By Id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/measurements/{{measurementId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

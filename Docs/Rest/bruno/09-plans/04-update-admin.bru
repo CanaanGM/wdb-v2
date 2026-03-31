@@ -1,0 +1,46 @@
+meta {
+  name: Update Plan (Admin)
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/plans/{{planId}}
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Savage v2",
+    "description": "Updated volume for week 1.",
+    "durationWeeks": 4,
+    "status": "published",
+    "days": [
+      {
+        "weekNumber": 1,
+        "dayNumber": 1,
+        "title": "Push Day",
+        "exercises": [
+          {
+            "exerciseId": 1,
+            "orderNumber": 1,
+            "sets": 5,
+            "repetitions": 6,
+            "targetRateOfPerceivedExertion": 8.5,
+            "targetWeightKg": 45,
+            "restInSeconds": 150
+          }
+        ]
+      }
+    ]
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

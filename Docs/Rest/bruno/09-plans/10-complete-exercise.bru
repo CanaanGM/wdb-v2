@@ -1,0 +1,27 @@
+meta {
+  name: Complete Plan Exercise
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/myplans/enrollments/{{planEnrollmentId}}/exercises/complete
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "localDate": "{{planFromLocalDate}}",
+    "planDayExerciseId": {{planDayExerciseId}},
+    "linkedWorkoutEntryId": 1
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

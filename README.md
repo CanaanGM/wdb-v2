@@ -79,6 +79,7 @@ docker compose up -d api
   - `Infrastructure/Persistence/Features/Equipments/Configurations`
   - `Infrastructure/Persistence/Features/Exercises/Configurations`
   - `Infrastructure/Persistence/Features/Muscles/Configurations`
+  - `Infrastructure/Persistence/Features/Plans/Configurations`
   - `Infrastructure/Persistence/Features/WorkoutBlocks/Configurations`
   - `Infrastructure/Persistence/Features/Workouts/Configurations`
 - Shared cross-feature persistence code (if needed) lives under:
@@ -163,8 +164,11 @@ docker compose down
 - `AUTH_BOOTSTRAP_ADMIN_EMAIL`
 - `AUTH_BOOTSTRAP_ADMIN_USERNAME`
 - `AUTH_BOOTSTRAP_ADMIN_PASSWORD`
+- `USER_EXERCISE_STATS_MAINTENANCE_RECOMPUTE_ALL_ON_STARTUP`
 
 `AUTH_JWT_SECRET` must be replaced with a strong custom value. The API will fail startup in all environments (including Development) if the placeholder value is still used.
+
+Set `USER_EXERCISE_STATS_MAINTENANCE_RECOMPUTE_ALL_ON_STARTUP=true` for a one-time full user exercise stats rebuild at startup, then set it back to `false`.
 
 ### Auth API quick test (PowerShell)
 
@@ -305,6 +309,7 @@ $body = @{
   description = "Upper body exercise"
   howTo = "Keep your core tight and lower until elbows hit ~90 degrees."
   difficulty = 2
+  trainingTypes = @("strength", "hypertrophy")
   exerciseMuscles = @(
     @{ muscleName = "Gastrocnemius"; isPrimary = $false }
   )
@@ -328,6 +333,7 @@ Invoke-RestMethod -Method Post `
 # - pageSize (1..100)
 # - search (name/description contains)
 # - difficulty (0..5)
+# - trainingTypeName
 # - muscleName
 # - muscleGroup
 # - isPrimary (true/false)
@@ -336,6 +342,7 @@ $searchBody = @{
   pageSize = 20
   search = "squat"
   difficulty = 3
+  trainingTypeName = "strength"
   muscleGroup = "quadriceps"
   isPrimary = $true
 } | ConvertTo-Json -Depth 4
@@ -694,7 +701,205 @@ Invoke-RestMethod -Method Delete `
   -Headers @{ Authorization = "Bearer $token" }
 ```
 
+### Plans API quick test (PowerShell)
+
+```powershell
+# Search published plans
+$searchPlansBody = @'
+{
+  "status": "published",
+  "search": "savage",
+  "pageNumber": 1,
+  "pageSize": 20
+}
+'@
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/plans/search" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -ContentType "application/json" `
+  -Body $searchPlansBody
+```
+
+```powershell
+# Get plan by id
+Invoke-RestMethod -Method Get `
+  -Uri "https://localhost:8081/api/plans/1" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" }
+```
+
+```powershell
+# Admin: create one plan
+$createPlanBody = @'
+{
+  "slug": "savage",
+  "name": "Savage",
+  "description": "4-week hypertrophy block",
+  "durationWeeks": 4,
+  "days": [
+    {
+      "weekNumber": 1,
+      "dayNumber": 1,
+      "title": "Push Day",
+      "exercises": [
+        {
+          "exerciseId": 1,
+          "orderNumber": 1,
+          "sets": 4,
+          "repetitions": 8,
+          "targetRateOfPerceivedExertion": 8,
+          "targetWeightKg": 40,
+          "restInSeconds": 120
+        }
+      ]
+    }
+  ]
+}
+'@
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/plans" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -ContentType "application/json" `
+  -Body $createPlanBody
+```
+
+```powershell
+# Admin: bulk create plans
+$bulkPlansBody = @'
+[
+  {
+    "slug": "savage",
+    "name": "Savage",
+    "durationWeeks": 4,
+    "days": [
+      {
+        "weekNumber": 1,
+        "dayNumber": 1,
+        "exercises": [
+          { "exerciseId": 1, "orderNumber": 1, "sets": 4, "repetitions": 8 }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "elite",
+    "name": "Elite",
+    "durationWeeks": 6,
+    "days": [
+      {
+        "weekNumber": 1,
+        "dayNumber": 1,
+        "exercises": [
+          { "exerciseId": 1, "orderNumber": 1, "sets": 5, "repetitions": 5 }
+        ]
+      }
+    ]
+  }
+]
+'@
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/plans/bulk" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -ContentType "application/json" `
+  -Body $bulkPlansBody
+```
+
+```powershell
+# Admin: bulk add exercises to a specific plan day
+$bulkDayExercisesBody = @'
+[
+  {
+    "exerciseId": 1,
+    "orderNumber": 10,
+    "sets": 3,
+    "repetitions": 12,
+    "targetRateOfPerceivedExertion": 7
+  },
+  {
+    "exerciseId": 2,
+    "orderNumber": 11,
+    "sets": 4,
+    "repetitions": 10,
+    "targetRateOfPerceivedExertion": 8
+  }
+]
+'@
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/plans/1/weeks/1/days/1/exercises/bulk" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -ContentType "application/json" `
+  -Body $bulkDayExercisesBody
+```
+
+```powershell
+# Enroll current user in plan
+$enrollBody = @'
+{
+  "startedAtUtc": "2026-04-01T06:00:00Z",
+  "timeZoneId": "Asia/Amman"
+}
+'@
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/plans/1/enroll" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -ContentType "application/json" `
+  -Body $enrollBody
+```
+
+```powershell
+# Search my enrollments
+$searchEnrollmentsBody = @'
+{
+  "status": "active",
+  "pageNumber": 1,
+  "pageSize": 20
+}
+'@
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/myplans/enrollments/search" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -ContentType "application/json" `
+  -Body $searchEnrollmentsBody
+```
+
+```powershell
+# Search my agenda
+$searchAgendaBody = @'
+{
+  "fromLocalDate": "2026-04-01",
+  "toLocalDate": "2026-04-14"
+}
+'@
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/myplans/agenda/search" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -ContentType "application/json" `
+  -Body $searchAgendaBody
+```
+
 ### User Exercise Stats API quick test (PowerShell)
+
+```powershell
+# Search user exercise stats (GET query variant)
+Invoke-RestMethod -Method Get `
+  -Uri "https://localhost:8081/api/userexercisestats?pageNumber=1&pageSize=20&search=squat&exerciseId=1" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" }
+```
 
 ```powershell
 # Search user exercise stats
@@ -718,6 +923,66 @@ Invoke-RestMethod -Method Post `
 # Get stat by exercise id
 Invoke-RestMethod -Method Get `
   -Uri "https://localhost:8081/api/userexercisestats/1" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" }
+```
+
+### Training Types API quick test (PowerShell)
+
+```powershell
+# Get all training types
+Invoke-RestMethod -Method Get `
+  -Uri "https://localhost:8081/api/trainingtypes" `
+  -SkipCertificateCheck
+```
+
+```powershell
+# Bulk create training types (admin token required)
+$bulkTypesBody = @'
+[
+  { "name": "strength" },
+  { "name": "hypertrophy" },
+  { "name": "conditioning" }
+]
+'@
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/trainingtypes/bulk" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $adminToken" } `
+  -ContentType "application/json" `
+  -Body $bulkTypesBody
+```
+
+### Measurements API quick test (PowerShell)
+
+```powershell
+# Create measurement
+$measurementBody = @'
+{
+  "hip": 95,
+  "chest": 102,
+  "waistOnBelly": 88,
+  "waistUnderBelly": 82,
+  "minerals": 3.5,
+  "protein": 12.8,
+  "totalBodyWater": 40.2,
+  "bodyFatMass": 18.7
+}
+'@
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:8081/api/measurements" `
+  -SkipCertificateCheck `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -ContentType "application/json" `
+  -Body $measurementBody
+```
+
+```powershell
+# Get my measurements
+Invoke-RestMethod -Method Get `
+  -Uri "https://localhost:8081/api/measurements" `
   -SkipCertificateCheck `
   -Headers @{ Authorization = "Bearer $token" }
 ```

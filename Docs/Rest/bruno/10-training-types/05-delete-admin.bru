@@ -1,0 +1,15 @@
+meta {
+  name: Delete Training Type (Admin)
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/trainingtypes/{{trainingTypeId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

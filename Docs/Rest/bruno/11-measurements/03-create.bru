@@ -1,0 +1,47 @@
+meta {
+  name: Create Measurement
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/measurements
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "hip": 95,
+    "chest": 102,
+    "waistOnBelly": 88,
+    "waistUnderBelly": 82,
+    "leftThigh": 57,
+    "rightThigh": 58,
+    "leftCalf": 38,
+    "rightCalf": 38,
+    "leftUpperArm": 34,
+    "rightUpperArm": 34,
+    "leftForearm": 29,
+    "rightForearm": 29,
+    "neck": 39,
+    "minerals": 3.5,
+    "protein": 12.8,
+    "totalBodyWater": 40.2,
+    "bodyFatMass": 18.7,
+    "bodyFatPercentage": 19.6,
+    "skeletalMuscleMass": 35.1,
+    "inBodyScore": 78,
+    "bodyMassIndex": 24.3,
+    "visceralFatLevel": 7,
+    "basalMetabolicRate": 1720
+  }
+}

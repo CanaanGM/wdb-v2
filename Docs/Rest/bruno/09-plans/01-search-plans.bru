@@ -1,0 +1,28 @@
+meta {
+  name: Search Plans
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/plans/search
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "search": "savage",
+    "status": "published",
+    "pageNumber": 1,
+    "pageSize": 20
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

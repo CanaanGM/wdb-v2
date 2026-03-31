@@ -1,0 +1,47 @@
+meta {
+  name: Create Plan (Admin)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/plans
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "slug": "savage",
+    "name": "Savage",
+    "description": "4-week hypertrophy plan",
+    "durationWeeks": 4,
+    "days": [
+      {
+        "weekNumber": 1,
+        "dayNumber": 1,
+        "title": "Push Day",
+        "notes": "Heavy compounds first.",
+        "exercises": [
+          {
+            "exerciseId": 1,
+            "orderNumber": 1,
+            "sets": 4,
+            "repetitions": 8,
+            "targetRateOfPerceivedExertion": 8,
+            "targetWeightKg": 40,
+            "restInSeconds": 120
+          }
+        ]
+      }
+    ]
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

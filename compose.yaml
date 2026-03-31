@@ -85,6 +85,7 @@ services:
       Auth__BootstrapAdmin__Email: "${AUTH_BOOTSTRAP_ADMIN_EMAIL}"
       Auth__BootstrapAdmin__Username: "${AUTH_BOOTSTRAP_ADMIN_USERNAME}"
       Auth__BootstrapAdmin__Password: "${AUTH_BOOTSTRAP_ADMIN_PASSWORD}"
+      UserExerciseStats__Maintenance__RecomputeAllOnStartup: "${USER_EXERCISE_STATS_MAINTENANCE_RECOMPUTE_ALL_ON_STARTUP}"
     ports:
       - "${API_HTTP_PORT:-8080}:80"
       - "${API_HTTPS_PORT:-8081}:443"

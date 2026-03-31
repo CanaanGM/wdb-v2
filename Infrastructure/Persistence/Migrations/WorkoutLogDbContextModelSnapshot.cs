@@ -188,6 +188,153 @@ namespace Infrastructure.Persistence.Migrations
                     b.ToTable("exercise_muscle", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Exercises.ExerciseTrainingType", b =>
+                {
+                    b.Property<int>("TrainingTypeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("training_type_id");
+
+                    b.Property<int>("ExerciseId")
+                        .HasColumnType("integer")
+                        .HasColumnName("exercise_id");
+
+                    b.HasKey("TrainingTypeId", "ExerciseId");
+
+                    b.HasIndex("ExerciseId");
+
+                    b.ToTable("exercise_training_type", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Measurements.Measurement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BasalMetabolicRate")
+                        .HasColumnType("integer")
+                        .HasColumnName("basal_metabolic_rate");
+
+                    b.Property<double?>("BodyFatMass")
+                        .HasColumnType("double precision")
+                        .HasColumnName("body_fat_mass");
+
+                    b.Property<double?>("BodyFatPercentage")
+                        .HasColumnType("double precision")
+                        .HasColumnName("body_fat_percentage");
+
+                    b.Property<double?>("BodyMassIndex")
+                        .HasColumnType("double precision")
+                        .HasColumnName("body_mass_index");
+
+                    b.Property<double?>("BodyWeight")
+                        .HasColumnType("double precision")
+                        .HasColumnName("body_weight");
+
+                    b.Property<double?>("Chest")
+                        .HasColumnType("double precision")
+                        .HasColumnName("chest");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<double?>("Hip")
+                        .HasColumnType("double precision")
+                        .HasColumnName("hip");
+
+                    b.Property<double?>("InBodyScore")
+                        .HasColumnType("double precision")
+                        .HasColumnName("in_body_score");
+
+                    b.Property<double?>("LeftCalf")
+                        .HasColumnType("double precision")
+                        .HasColumnName("left_calf");
+
+                    b.Property<double?>("LeftForearm")
+                        .HasColumnType("double precision")
+                        .HasColumnName("left_forearm");
+
+                    b.Property<double?>("LeftThigh")
+                        .HasColumnType("double precision")
+                        .HasColumnName("left_thigh");
+
+                    b.Property<double?>("LeftUpperArm")
+                        .HasColumnType("double precision")
+                        .HasColumnName("left_upper_arm");
+
+                    b.Property<double?>("Minerals")
+                        .HasColumnType("double precision")
+                        .HasColumnName("minerals");
+
+                    b.Property<double?>("Neck")
+                        .HasColumnType("double precision")
+                        .HasColumnName("neck");
+
+                    b.Property<double?>("Protein")
+                        .HasColumnType("double precision")
+                        .HasColumnName("protein");
+
+                    b.Property<double?>("RightCalf")
+                        .HasColumnType("double precision")
+                        .HasColumnName("right_calf");
+
+                    b.Property<double?>("RightForearm")
+                        .HasColumnType("double precision")
+                        .HasColumnName("right_forearm");
+
+                    b.Property<double?>("RightThigh")
+                        .HasColumnType("double precision")
+                        .HasColumnName("right_thigh");
+
+                    b.Property<double?>("RightUpperArm")
+                        .HasColumnType("double precision")
+                        .HasColumnName("right_upper_arm");
+
+                    b.Property<double?>("SkeletalMuscleMass")
+                        .HasColumnType("double precision")
+                        .HasColumnName("skeletal_muscle_mass");
+
+                    b.Property<double?>("TotalBodyWater")
+                        .HasColumnType("double precision")
+                        .HasColumnName("total_body_water");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.Property<int?>("VisceralFatLevel")
+                        .HasColumnType("integer")
+                        .HasColumnName("visceral_fat_level");
+
+                    b.Property<double?>("WaistOnBelly")
+                        .HasColumnType("double precision")
+                        .HasColumnName("waist_on_belly");
+
+                    b.Property<double?>("WaistUnderBelly")
+                        .HasColumnType("double precision")
+                        .HasColumnName("waist_under_belly");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAtUtc")
+                        .HasDatabaseName("IX_measurement_user_id_created_at_utc");
+
+                    b.ToTable("measurement", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_measurement_bmr_non_negative", "basal_metabolic_rate IS NULL OR basal_metabolic_rate >= 0");
+
+                            t.HasCheckConstraint("CK_measurement_user_id_positive", "user_id > 0");
+
+                            t.HasCheckConstraint("CK_measurement_visceral_fat_non_negative", "visceral_fat_level IS NULL OR visceral_fat_level >= 0");
+                        });
+                });
+
             modelBuilder.Entity("Domain.Muscles.Muscle", b =>
                 {
                     b.Property<int>("Id")
@@ -228,6 +375,416 @@ namespace Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_muscle_group_lowercase", "muscle_group = lower(muscle_group)");
 
                             t.HasCheckConstraint("CK_muscle_name_lowercase", "name = lower(name)");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Plans.PlanDay", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DayNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("day_number");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("notes");
+
+                    b.Property<int>("PlanTemplateId")
+                        .HasColumnType("integer")
+                        .HasColumnName("plan_template_id");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("title");
+
+                    b.Property<int>("WeekNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("week_number");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlanTemplateId", "WeekNumber", "DayNumber")
+                        .IsUnique()
+                        .HasDatabaseName("IX_plan_day_plan_template_id_week_number_day_number");
+
+                    b.ToTable("plan_day", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_plan_day_day_range", "day_number >= 1 AND day_number <= 7");
+
+                            t.HasCheckConstraint("CK_plan_day_week_positive", "week_number >= 1");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Plans.PlanDayExercise", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<int?>("DistanceInMeters")
+                        .HasColumnType("integer")
+                        .HasColumnName("distance_in_meters");
+
+                    b.Property<int>("ExerciseId")
+                        .HasColumnType("integer")
+                        .HasColumnName("exercise_id");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("notes");
+
+                    b.Property<int>("OrderNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("order_number");
+
+                    b.Property<int>("PlanDayId")
+                        .HasColumnType("integer")
+                        .HasColumnName("plan_day_id");
+
+                    b.Property<int?>("Repetitions")
+                        .HasColumnType("integer")
+                        .HasColumnName("repetitions");
+
+                    b.Property<int?>("RestInSeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("rest_in_seconds");
+
+                    b.Property<int?>("Sets")
+                        .HasColumnType("integer")
+                        .HasColumnName("sets");
+
+                    b.Property<double?>("TargetRateOfPerceivedExertion")
+                        .HasColumnType("double precision")
+                        .HasColumnName("target_rate_of_perceived_exertion");
+
+                    b.Property<double?>("TargetWeightKg")
+                        .HasColumnType("double precision")
+                        .HasColumnName("target_weight_kg");
+
+                    b.Property<int?>("TimerInSeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("timer_in_seconds");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExerciseId")
+                        .HasDatabaseName("IX_plan_day_exercise_exercise_id");
+
+                    b.HasIndex("PlanDayId", "OrderNumber")
+                        .IsUnique()
+                        .HasDatabaseName("IX_plan_day_exercise_plan_day_id_order_number");
+
+                    b.ToTable("plan_day_exercise", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_plan_day_exercise_distance_non_negative", "distance_in_meters IS NULL OR distance_in_meters >= 0");
+
+                            t.HasCheckConstraint("CK_plan_day_exercise_order_non_negative", "order_number >= 0");
+
+                            t.HasCheckConstraint("CK_plan_day_exercise_repetitions_non_negative", "repetitions IS NULL OR repetitions >= 0");
+
+                            t.HasCheckConstraint("CK_plan_day_exercise_rest_non_negative", "rest_in_seconds IS NULL OR rest_in_seconds >= 0");
+
+                            t.HasCheckConstraint("CK_plan_day_exercise_sets_non_negative", "sets IS NULL OR sets >= 0");
+
+                            t.HasCheckConstraint("CK_plan_day_exercise_target_rpe_range", "target_rate_of_perceived_exertion IS NULL OR (target_rate_of_perceived_exertion >= 0 AND target_rate_of_perceived_exertion <= 10)");
+
+                            t.HasCheckConstraint("CK_plan_day_exercise_target_weight_non_negative", "target_weight_kg IS NULL OR target_weight_kg >= 0");
+
+                            t.HasCheckConstraint("CK_plan_day_exercise_timer_non_negative", "timer_in_seconds IS NULL OR timer_in_seconds >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Plans.PlanTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("description");
+
+                    b.Property<int>("DurationWeeks")
+                        .HasColumnType("integer")
+                        .HasColumnName("duration_weeks");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("slug");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_plan_template_status");
+
+                    b.HasIndex("Slug", "Version")
+                        .IsUnique()
+                        .HasDatabaseName("IX_plan_template_slug_version");
+
+                    b.ToTable("plan_template", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_plan_template_duration_weeks_positive", "duration_weeks >= 1");
+
+                            t.HasCheckConstraint("CK_plan_template_slug_lowercase", "slug = lower(slug)");
+
+                            t.HasCheckConstraint("CK_plan_template_status", "status IN ('draft', 'published', 'archived')");
+
+                            t.HasCheckConstraint("CK_plan_template_version_positive", "version >= 1");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Plans.UserPlanDayExecution", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<int>("EnrollmentId")
+                        .HasColumnType("integer")
+                        .HasColumnName("enrollment_id");
+
+                    b.Property<int?>("LinkedWorkoutSessionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("linked_workout_session_id");
+
+                    b.Property<DateOnly>("LocalDate")
+                        .HasColumnType("date")
+                        .HasColumnName("local_date");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LinkedWorkoutSessionId");
+
+                    b.HasIndex("EnrollmentId", "LocalDate")
+                        .IsUnique()
+                        .HasDatabaseName("IX_user_plan_day_execution_enrollment_id_local_date");
+
+                    b.ToTable("user_plan_day_execution", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_user_plan_day_execution_status", "status IN ('scheduled', 'completed', 'skipped', 'partial')");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Plans.UserPlanEnrollment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("display_order");
+
+                    b.Property<DateOnly>("EndLocalDateInclusive")
+                        .HasColumnType("date")
+                        .HasColumnName("end_local_date_inclusive");
+
+                    b.Property<int>("PlanTemplateId")
+                        .HasColumnType("integer")
+                        .HasColumnName("plan_template_id");
+
+                    b.Property<DateOnly>("StartLocalDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_local_date");
+
+                    b.Property<DateTime>("StartedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at_utc");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TimeZoneId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("time_zone_id");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlanTemplateId");
+
+                    b.HasIndex("UserId", "Status")
+                        .HasDatabaseName("IX_user_plan_enrollment_user_id_status");
+
+                    b.HasIndex("UserId", "PlanTemplateId", "Status")
+                        .HasDatabaseName("IX_user_plan_enrollment_user_id_plan_template_id_status");
+
+                    b.ToTable("user_plan_enrollment", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_user_plan_enrollment_display_order_non_negative", "display_order >= 0");
+
+                            t.HasCheckConstraint("CK_user_plan_enrollment_status", "status IN ('active', 'completed', 'cancelled')");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Plans.UserPlanExerciseExecution", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<int>("DayExecutionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("day_execution_id");
+
+                    b.Property<int?>("LinkedWorkoutEntryId")
+                        .HasColumnType("integer")
+                        .HasColumnName("linked_workout_entry_id");
+
+                    b.Property<int>("PlanDayExerciseId")
+                        .HasColumnType("integer")
+                        .HasColumnName("plan_day_exercise_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LinkedWorkoutEntryId");
+
+                    b.HasIndex("PlanDayExerciseId");
+
+                    b.HasIndex("DayExecutionId", "PlanDayExerciseId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_user_plan_exercise_execution_day_execution_id_plan_day_exercise_id");
+
+                    b.ToTable("user_plan_exercise_execution", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_user_plan_exercise_execution_status", "status IN ('pending', 'completed', 'skipped')");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.TrainingTypes.TrainingType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_training_type_name");
+
+                    b.ToTable("training_type", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_training_type_name_lowercase", "name = lower(name)");
                         });
                 });
 
@@ -1005,6 +1562,125 @@ namespace Infrastructure.Persistence.Migrations
                     b.Navigation("Muscle");
                 });
 
+            modelBuilder.Entity("Domain.Exercises.ExerciseTrainingType", b =>
+                {
+                    b.HasOne("Domain.Exercises.Exercise", "Exercise")
+                        .WithMany("ExerciseTrainingTypes")
+                        .HasForeignKey("ExerciseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.TrainingTypes.TrainingType", "TrainingType")
+                        .WithMany("ExerciseTrainingTypes")
+                        .HasForeignKey("TrainingTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Exercise");
+
+                    b.Navigation("TrainingType");
+                });
+
+            modelBuilder.Entity("Domain.Measurements.Measurement", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Features.Auth.Entities.AuthUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Plans.PlanDay", b =>
+                {
+                    b.HasOne("Domain.Plans.PlanTemplate", "PlanTemplate")
+                        .WithMany("Days")
+                        .HasForeignKey("PlanTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PlanTemplate");
+                });
+
+            modelBuilder.Entity("Domain.Plans.PlanDayExercise", b =>
+                {
+                    b.HasOne("Domain.Exercises.Exercise", "Exercise")
+                        .WithMany()
+                        .HasForeignKey("ExerciseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Plans.PlanDay", "PlanDay")
+                        .WithMany("Exercises")
+                        .HasForeignKey("PlanDayId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Exercise");
+
+                    b.Navigation("PlanDay");
+                });
+
+            modelBuilder.Entity("Domain.Plans.UserPlanDayExecution", b =>
+                {
+                    b.HasOne("Domain.Plans.UserPlanEnrollment", "Enrollment")
+                        .WithMany("DayExecutions")
+                        .HasForeignKey("EnrollmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Workouts.WorkoutSession", "LinkedWorkoutSession")
+                        .WithMany()
+                        .HasForeignKey("LinkedWorkoutSessionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Enrollment");
+
+                    b.Navigation("LinkedWorkoutSession");
+                });
+
+            modelBuilder.Entity("Domain.Plans.UserPlanEnrollment", b =>
+                {
+                    b.HasOne("Domain.Plans.PlanTemplate", "PlanTemplate")
+                        .WithMany()
+                        .HasForeignKey("PlanTemplateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Features.Auth.Entities.AuthUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PlanTemplate");
+                });
+
+            modelBuilder.Entity("Domain.Plans.UserPlanExerciseExecution", b =>
+                {
+                    b.HasOne("Domain.Plans.UserPlanDayExecution", "DayExecution")
+                        .WithMany("ExerciseExecutions")
+                        .HasForeignKey("DayExecutionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Workouts.WorkoutEntry", "LinkedWorkoutEntry")
+                        .WithMany()
+                        .HasForeignKey("LinkedWorkoutEntryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Domain.Plans.PlanDayExercise", "PlanDayExercise")
+                        .WithMany()
+                        .HasForeignKey("PlanDayExerciseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DayExecution");
+
+                    b.Navigation("LinkedWorkoutEntry");
+
+                    b.Navigation("PlanDayExercise");
+                });
+
             modelBuilder.Entity("Domain.WorkoutBlocks.WorkoutBlock", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Features.Auth.Entities.AuthUser", null)
@@ -1151,12 +1827,39 @@ namespace Infrastructure.Persistence.Migrations
 
                     b.Navigation("ExerciseMuscles");
 
+                    b.Navigation("ExerciseTrainingTypes");
+
                     b.Navigation("HowTos");
                 });
 
             modelBuilder.Entity("Domain.Muscles.Muscle", b =>
                 {
                     b.Navigation("ExerciseMuscles");
+                });
+
+            modelBuilder.Entity("Domain.Plans.PlanDay", b =>
+                {
+                    b.Navigation("Exercises");
+                });
+
+            modelBuilder.Entity("Domain.Plans.PlanTemplate", b =>
+                {
+                    b.Navigation("Days");
+                });
+
+            modelBuilder.Entity("Domain.Plans.UserPlanDayExecution", b =>
+                {
+                    b.Navigation("ExerciseExecutions");
+                });
+
+            modelBuilder.Entity("Domain.Plans.UserPlanEnrollment", b =>
+                {
+                    b.Navigation("DayExecutions");
+                });
+
+            modelBuilder.Entity("Domain.TrainingTypes.TrainingType", b =>
+                {
+                    b.Navigation("ExerciseTrainingTypes");
                 });
 
             modelBuilder.Entity("Domain.WorkoutBlocks.WorkoutBlock", b =>

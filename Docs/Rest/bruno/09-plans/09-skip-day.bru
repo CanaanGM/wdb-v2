@@ -1,0 +1,26 @@
+meta {
+  name: Skip Plan Day
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/myplans/enrollments/{{planEnrollmentId}}/days/skip
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "localDate": "{{planFromLocalDate}}",
+    "notes": "Travel day."
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

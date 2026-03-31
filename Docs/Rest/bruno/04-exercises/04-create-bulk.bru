@@ -15,22 +15,42 @@ headers {
 }
 
 body:json {
-  {
-    "difficulty": 2,
-    "howTo": "Sit back and keep knees tracking over toes.",
-    "exerciseMuscles": [
-      {
-        "muscleName": "Rectus Femoris",
-        "isPrimary": true
-      }
-    ],
-    "name": "Bodyweight Squat",
-    "description": "Lower body movement",
-    "howTos": [
-      {
-        "url": "https://example.com/squat-video",
-        "name": "Video"
-      }
-    ]
-  }
+  [
+    {
+      "difficulty": 2,
+      "howTo": "Sit back and keep knees tracking over toes.",
+      "trainingTypes": [
+        "strength"
+      ],
+      "exerciseMuscles": [
+        {
+          "muscleName": "Rectus Femoris",
+          "isPrimary": true
+        }
+      ],
+      "name": "Bodyweight Squat",
+      "description": "Lower body movement",
+      "howTos": [
+        {
+          "url": "https://example.com/squat-video",
+          "name": "Video"
+        }
+      ]
+    },
+    {
+      "difficulty": 3,
+      "trainingTypes": [
+        "hypertrophy"
+      ],
+      "exerciseMuscles": [
+        {
+          "muscleName": "Biceps Femoris",
+          "isPrimary": true
+        }
+      ],
+      "name": "Romanian Deadlift",
+      "description": "Hip hinge focused movement",
+      "howTos": []
+    }
+  ]
 }

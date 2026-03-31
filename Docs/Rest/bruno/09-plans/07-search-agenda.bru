@@ -1,0 +1,26 @@
+meta {
+  name: Search My Plan Agenda
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/myplans/agenda/search
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "fromLocalDate": "{{planFromLocalDate}}",
+    "toLocalDate": "{{planToLocalDate}}"
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

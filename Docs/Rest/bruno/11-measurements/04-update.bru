@@ -1,0 +1,30 @@
+meta {
+  name: Update Measurement
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/measurements/{{measurementId}}
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "hip": 94.5,
+    "chest": 101.5,
+    "waistOnBelly": 86.5,
+    "waistUnderBelly": 81.5,
+    "bodyFatPercentage": 18.9,
+    "bodyMassIndex": 23.8
+  }
+}

@@ -1,0 +1,42 @@
+meta {
+  name: Create Plan Day Exercises Bulk (Admin)
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/plans/{{planId}}/weeks/{{planWeekNumber}}/days/{{planDayNumber}}/exercises/bulk
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  [
+    {
+      "exerciseId": 1,
+      "orderNumber": 10,
+      "sets": 3,
+      "repetitions": 12,
+      "targetRateOfPerceivedExertion": 7,
+      "targetWeightKg": 30,
+      "restInSeconds": 90
+    },
+    {
+      "exerciseId": 2,
+      "orderNumber": 11,
+      "sets": 4,
+      "repetitions": 10,
+      "targetRateOfPerceivedExertion": 8,
+      "targetWeightKg": 25,
+      "restInSeconds": 75
+    }
+  ]
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

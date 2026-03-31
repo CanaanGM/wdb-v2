@@ -1,0 +1,15 @@
+meta {
+  name: Search User Exercise Stats (GET)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/userexercisestats?pageNumber=1&pageSize=20&search=push&exerciseId={{exerciseId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

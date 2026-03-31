@@ -10,4 +10,6 @@ public interface IUserExerciseStatsService
     Task<UserExerciseStatResponse?> GetByExerciseIdAsync(int userId, int exerciseId, CancellationToken cancellationToken);
 
     Task RecomputeForExercisesAsync(int userId, IReadOnlyCollection<int> exerciseIds, CancellationToken cancellationToken);
+
+    Task RecomputeAllAsync(CancellationToken cancellationToken);
 }

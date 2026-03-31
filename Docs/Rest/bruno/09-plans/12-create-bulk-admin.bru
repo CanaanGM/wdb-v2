@@ -1,0 +1,72 @@
+meta {
+  name: Create Plans Bulk (Admin)
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/plans/bulk
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  [
+    {
+      "slug": "savage",
+      "name": "Savage",
+      "description": "4-week hypertrophy block",
+      "durationWeeks": 4,
+      "days": [
+        {
+          "weekNumber": 1,
+          "dayNumber": 1,
+          "title": "Push Day",
+          "exercises": [
+            {
+              "exerciseId": 1,
+              "orderNumber": 1,
+              "sets": 4,
+              "repetitions": 8,
+              "targetRateOfPerceivedExertion": 8,
+              "targetWeightKg": 40,
+              "restInSeconds": 120
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "elite",
+      "name": "Elite",
+      "description": "6-week strength plan",
+      "durationWeeks": 6,
+      "days": [
+        {
+          "weekNumber": 1,
+          "dayNumber": 1,
+          "title": "Strength Day",
+          "exercises": [
+            {
+              "exerciseId": 2,
+              "orderNumber": 1,
+              "sets": 5,
+              "repetitions": 5,
+              "targetRateOfPerceivedExertion": 8,
+              "targetWeightKg": 60,
+              "restInSeconds": 150
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

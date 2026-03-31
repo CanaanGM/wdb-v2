@@ -1,0 +1,15 @@
+meta {
+  name: Cancel Plan Enrollment
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/myplans/enrollments/{{planEnrollmentId}}/cancel
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

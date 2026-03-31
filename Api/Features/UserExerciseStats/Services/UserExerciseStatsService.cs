@@ -67,12 +67,41 @@ public sealed class UserExerciseStatsService(WorkoutLogDbContext dbContext) : IU
             return;
         }
 
-        var metrics = await dbContext.WorkoutEntries
+        await RecomputeAsync(userId, distinctExerciseIds, cancellationToken);
+    }
+
+    public async Task RecomputeAllAsync(CancellationToken cancellationToken)
+    {
+        await RecomputeAsync(userId: null, exerciseIds: null, cancellationToken);
+    }
+
+    private async Task RecomputeAsync(
+        int? userId,
+        IReadOnlyCollection<int>? exerciseIds,
+        CancellationToken cancellationToken)
+    {
+        var metricsQuery = dbContext.WorkoutEntries
             .AsNoTracking()
-            .Where(x => x.WorkoutSession.UserId == userId && distinctExerciseIds.Contains(x.ExerciseId))
+            .AsQueryable();
+
+        if (userId.HasValue)
+        {
+            var value = userId.Value;
+            metricsQuery = metricsQuery.Where(x => x.WorkoutSession.UserId == value);
+        }
+
+        if (exerciseIds is { Count: > 0 })
+        {
+            metricsQuery = metricsQuery.Where(x => exerciseIds.Contains(x.ExerciseId));
+        }
+
+        var metrics = await metricsQuery
             .Select(x => new ExerciseMetricRow
             {
+                EntryId = x.Id,
+                UserId = x.WorkoutSession.UserId,
                 ExerciseId = x.ExerciseId,
+                OrderNumber = x.OrderNumber,
                 WeightUsedKg = x.WeightUsedKg,
                 TimerInSeconds = x.TimerInSeconds,
                 HeartRateAvg = x.HeartRateAvg,
@@ -85,23 +114,35 @@ public sealed class UserExerciseStatsService(WorkoutLogDbContext dbContext) : IU
             })
             .ToListAsync(cancellationToken);
 
-        var existingStats = await dbContext.UserExerciseStats
-            .Where(x => x.UserId == userId && distinctExerciseIds.Contains(x.ExerciseId))
-            .ToDictionaryAsync(x => x.ExerciseId, cancellationToken);
+        var metricsByKey = metrics
+            .GroupBy(x => new UserExerciseKey(x.UserId, x.ExerciseId))
+            .ToDictionary(x => x.Key, x => x.ToList());
+
+        var existingStatsQuery = dbContext.UserExerciseStats.AsQueryable();
+        if (userId.HasValue)
+        {
+            var value = userId.Value;
+            existingStatsQuery = existingStatsQuery.Where(x => x.UserId == value);
+        }
+
+        if (exerciseIds is { Count: > 0 })
+        {
+            existingStatsQuery = existingStatsQuery.Where(x => exerciseIds.Contains(x.ExerciseId));
+        }
+
+        var existingStats = await existingStatsQuery
+            .ToDictionaryAsync(x => new UserExerciseKey(x.UserId, x.ExerciseId), cancellationToken);
 
         var now = DateTime.UtcNow;
+        var allKeys = metricsByKey.Keys
+            .Union(existingStats.Keys)
+            .ToList();
 
-        foreach (var exerciseId in distinctExerciseIds)
+        foreach (var key in allKeys)
         {
-            var exerciseMetrics = metrics
-                .Where(x => x.ExerciseId == exerciseId)
-                .OrderByDescending(x => x.PerformedAtUtc)
-                .ThenByDescending(x => x.CreatedAtUtc)
-                .ToList();
-
-            if (exerciseMetrics.Count == 0)
+            if (!metricsByKey.TryGetValue(key, out var exerciseMetrics) || exerciseMetrics.Count == 0)
             {
-                if (existingStats.TryGetValue(exerciseId, out var statToRemove))
+                if (existingStats.TryGetValue(key, out var statToRemove))
                 {
                     dbContext.UserExerciseStats.Remove(statToRemove);
                 }
@@ -109,30 +150,37 @@ public sealed class UserExerciseStatsService(WorkoutLogDbContext dbContext) : IU
                 continue;
             }
 
-            if (!existingStats.TryGetValue(exerciseId, out var stat))
+            if (!existingStats.TryGetValue(key, out var stat))
             {
                 stat = new UserExerciseStat
                 {
-                    UserId = userId,
-                    ExerciseId = exerciseId,
+                    UserId = key.UserId,
+                    ExerciseId = key.ExerciseId,
                     CreatedAtUtc = now
                 };
 
                 dbContext.UserExerciseStats.Add(stat);
             }
 
-            var latestMetric = exerciseMetrics[0];
+            var orderedMetrics = exerciseMetrics
+                .OrderByDescending(x => x.PerformedAtUtc)
+                .ThenByDescending(x => x.OrderNumber)
+                .ThenByDescending(x => x.CreatedAtUtc)
+                .ThenByDescending(x => x.EntryId)
+                .ToList();
 
-            stat.UseCount = exerciseMetrics.Count;
-            stat.BestWeightKg = exerciseMetrics.Max(x => x.WeightUsedKg);
-            stat.AverageWeightKg = exerciseMetrics.Average(x => x.WeightUsedKg);
+            var latestMetric = orderedMetrics[0];
+
+            stat.UseCount = orderedMetrics.Count;
+            stat.BestWeightKg = orderedMetrics.Max(x => x.WeightUsedKg);
+            stat.AverageWeightKg = orderedMetrics.Average(x => x.WeightUsedKg);
             stat.LastUsedWeightKg = latestMetric.WeightUsedKg;
-            stat.AverageTimerInSeconds = AverageNullable(exerciseMetrics.Select(x => x.TimerInSeconds));
-            stat.AverageHeartRate = AverageNullable(exerciseMetrics.Select(x => x.HeartRateAvg));
-            stat.AverageKcalBurned = exerciseMetrics.Average(x => (double)x.KcalBurned);
-            stat.AverageDistanceMeters = AverageNullable(exerciseMetrics.Select(x => x.DistanceInMeters));
-            stat.AverageSpeed = AverageNullable(exerciseMetrics.Select(x => x.Speed));
-            stat.AverageRateOfPerceivedExertion = exerciseMetrics.Average(x => x.RateOfPerceivedExertion);
+            stat.AverageTimerInSeconds = AverageNullable(orderedMetrics.Select(x => x.TimerInSeconds));
+            stat.AverageHeartRate = AverageNullable(orderedMetrics.Select(x => x.HeartRateAvg));
+            stat.AverageKcalBurned = orderedMetrics.Average(x => (double)x.KcalBurned);
+            stat.AverageDistanceMeters = AverageNullable(orderedMetrics.Select(x => x.DistanceInMeters));
+            stat.AverageSpeed = AverageNullable(orderedMetrics.Select(x => x.Speed));
+            stat.AverageRateOfPerceivedExertion = orderedMetrics.Average(x => x.RateOfPerceivedExertion);
             stat.LastPerformedAtUtc = latestMetric.PerformedAtUtc;
             stat.UpdatedAtUtc = now;
         }
@@ -178,7 +226,13 @@ public sealed class UserExerciseStatsService(WorkoutLogDbContext dbContext) : IU
 
     private sealed class ExerciseMetricRow
     {
+        public int EntryId { get; init; }
+
+        public int UserId { get; init; }
+
         public int ExerciseId { get; init; }
+
+        public int OrderNumber { get; init; }
 
         public double WeightUsedKg { get; init; }
 
@@ -198,4 +252,6 @@ public sealed class UserExerciseStatsService(WorkoutLogDbContext dbContext) : IU
 
         public DateTime CreatedAtUtc { get; init; }
     }
+
+    private readonly record struct UserExerciseKey(int UserId, int ExerciseId);
 }

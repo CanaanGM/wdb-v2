@@ -1,6 +1,9 @@
 using Domain.Equipments;
 using Domain.Exercises;
+using Domain.Measurements;
 using Domain.Muscles;
+using Domain.Plans;
+using Domain.TrainingTypes;
 using Domain.WorkoutBlocks;
 using Domain.Workouts;
 using Infrastructure.Persistence.Features.Auth.Entities;
@@ -23,9 +26,15 @@ public sealed class WorkoutLogDbContext(DbContextOptions<WorkoutLogDbContext> op
 
     public DbSet<ExerciseEquipment> ExerciseEquipments => Set<ExerciseEquipment>();
 
+    public DbSet<ExerciseTrainingType> ExerciseTrainingTypes => Set<ExerciseTrainingType>();
+
     public DbSet<Muscle> Muscles => Set<Muscle>();
 
     public DbSet<Equipment> Equipments => Set<Equipment>();
+
+    public DbSet<TrainingType> TrainingTypes => Set<TrainingType>();
+
+    public DbSet<Measurement> Measurements => Set<Measurement>();
 
     public DbSet<WorkoutSession> WorkoutSessions => Set<WorkoutSession>();
 
@@ -36,6 +45,18 @@ public sealed class WorkoutLogDbContext(DbContextOptions<WorkoutLogDbContext> op
     public DbSet<WorkoutBlock> WorkoutBlocks => Set<WorkoutBlock>();
 
     public DbSet<WorkoutBlockExercise> WorkoutBlockExercises => Set<WorkoutBlockExercise>();
+
+    public DbSet<PlanTemplate> PlanTemplates => Set<PlanTemplate>();
+
+    public DbSet<PlanDay> PlanDays => Set<PlanDay>();
+
+    public DbSet<PlanDayExercise> PlanDayExercises => Set<PlanDayExercise>();
+
+    public DbSet<UserPlanEnrollment> UserPlanEnrollments => Set<UserPlanEnrollment>();
+
+    public DbSet<UserPlanDayExecution> UserPlanDayExecutions => Set<UserPlanDayExecution>();
+
+    public DbSet<UserPlanExerciseExecution> UserPlanExerciseExecutions => Set<UserPlanExerciseExecution>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

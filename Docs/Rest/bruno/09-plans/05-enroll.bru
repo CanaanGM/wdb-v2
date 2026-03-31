@@ -1,0 +1,26 @@
+meta {
+  name: Enroll In Plan
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/plans/{{planId}}/enroll
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "startedAtUtc": "2026-04-01T06:00:00Z",
+    "timeZoneId": "{{planTimeZoneId}}"
+  }
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

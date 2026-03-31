@@ -27,6 +27,10 @@ public sealed class ExercisesService(WorkoutLogDbContext dbContext) : IExercises
             ? null
             : StorageTextNormalizer.NormalizeKey(request.MuscleGroup);
 
+        var normalizedTrainingTypeName = string.IsNullOrWhiteSpace(request.TrainingTypeName)
+            ? null
+            : StorageTextNormalizer.NormalizeKey(request.TrainingTypeName);
+
         var difficulty = request.Difficulty;
         var isPrimary = request.IsPrimary;
         var difficultyValue = difficulty ?? default;
@@ -48,6 +52,9 @@ public sealed class ExercisesService(WorkoutLogDbContext dbContext) : IExercises
                 normalizedMuscleGroup is not null,
                 x => x.ExerciseMuscles.Any(em => em.Muscle.MuscleGroup == normalizedMuscleGroup))
             .WhereIf(
+                normalizedTrainingTypeName is not null,
+                x => x.ExerciseTrainingTypes.Any(et => et.TrainingType.Name == normalizedTrainingTypeName))
+            .WhereIf(
                 isPrimary.HasValue,
                 x => x.ExerciseMuscles.Any(em => em.IsPrimary == isPrimaryValue))
             .OrderBy(x => x.Name)
@@ -63,6 +70,8 @@ public sealed class ExercisesService(WorkoutLogDbContext dbContext) : IExercises
             .Include(x => x.HowTos)
             .Include(x => x.ExerciseMuscles)
             .ThenInclude(x => x.Muscle)
+            .Include(x => x.ExerciseTrainingTypes)
+            .ThenInclude(x => x.TrainingType)
             .Where(x => x.Id == id)
             .Select(MapToResponseExpression())
             .SingleOrDefaultAsync(cancellationToken);
@@ -93,7 +102,18 @@ public sealed class ExercisesService(WorkoutLogDbContext dbContext) : IExercises
                 $"Muscles not found: {string.Join(", ", muscleResolution.MissingMuscles)}.");
         }
 
-        var exercise = MapToEntity(request, normalizedName, muscleResolution.MuscleIdByName);
+        var trainingTypeResolution = await ResolveTrainingTypeIdsAsync(request.TrainingTypes, cancellationToken);
+        if (trainingTypeResolution.MissingTrainingTypes.Count > 0)
+        {
+            return CreateExerciseResult.ValidationError(
+                $"Training types not found: {string.Join(", ", trainingTypeResolution.MissingTrainingTypes)}.");
+        }
+
+        var exercise = MapToEntity(
+            request,
+            normalizedName,
+            muscleResolution.MuscleIdByName,
+            trainingTypeResolution.TrainingTypeIdByName);
 
         dbContext.Exercises.Add(exercise);
         try
@@ -110,6 +130,8 @@ public sealed class ExercisesService(WorkoutLogDbContext dbContext) : IExercises
             .Include(x => x.HowTos)
             .Include(x => x.ExerciseMuscles)
             .ThenInclude(x => x.Muscle)
+            .Include(x => x.ExerciseTrainingTypes)
+            .ThenInclude(x => x.TrainingType)
             .Where(x => x.Id == exercise.Id)
             .Select(MapToResponseExpression())
             .SingleAsync(cancellationToken);
@@ -128,6 +150,7 @@ public sealed class ExercisesService(WorkoutLogDbContext dbContext) : IExercises
 
         var normalizedNames = new List<string>(requests.Count);
         var allMuscleNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var allTrainingTypeNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         for (var i = 0; i < requests.Count; i++)
         {
@@ -136,6 +159,11 @@ public sealed class ExercisesService(WorkoutLogDbContext dbContext) : IExercises
             foreach (var exerciseMuscle in requests[i].ExerciseMuscles)
             {
                 allMuscleNames.Add(StorageTextNormalizer.NormalizeKey(exerciseMuscle.MuscleName));
+            }
+
+            foreach (var trainingType in requests[i].TrainingTypes)
+            {
+                allTrainingTypeNames.Add(StorageTextNormalizer.NormalizeKey(trainingType));
             }
         }
 
@@ -177,8 +205,19 @@ public sealed class ExercisesService(WorkoutLogDbContext dbContext) : IExercises
                 $"Muscles not found: {string.Join(", ", muscleResolution.MissingMuscles)}.");
         }
 
+        var trainingTypeResolution = await ResolveTrainingTypeIdsAsync(allTrainingTypeNames, cancellationToken);
+        if (trainingTypeResolution.MissingTrainingTypes.Count > 0)
+        {
+            return CreateExercisesBulkResult.ValidationError(
+                $"Training types not found: {string.Join(", ", trainingTypeResolution.MissingTrainingTypes)}.");
+        }
+
         var exercises = requests
-            .Select((request, index) => MapToEntity(request, normalizedNames[index], muscleResolution.MuscleIdByName))
+            .Select((request, index) => MapToEntity(
+                request,
+                normalizedNames[index],
+                muscleResolution.MuscleIdByName,
+                trainingTypeResolution.TrainingTypeIdByName))
             .ToList();
 
         dbContext.Exercises.AddRange(exercises);
@@ -204,6 +243,10 @@ public sealed class ExercisesService(WorkoutLogDbContext dbContext) : IExercises
             Description = x.Description,
             HowTo = x.HowTo,
             Difficulty = x.Difficulty,
+            TrainingTypes = x.ExerciseTrainingTypes
+                .Select(et => et.TrainingType.Name)
+                .OrderBy(name => name)
+                .ToList(),
             HowTos = x.HowTos
                 .OrderBy(h => h.Id)
                 .Select(h => new ExerciseHowToResponse
@@ -231,10 +274,12 @@ public sealed class ExercisesService(WorkoutLogDbContext dbContext) : IExercises
     private static Exercise MapToEntity(
         CreateExerciseRequest request,
         string normalizedName,
-        IReadOnlyDictionary<string, int> muscleIdByName)
+        IReadOnlyDictionary<string, int> muscleIdByName,
+        IReadOnlyDictionary<string, int> trainingTypeIdByName)
     {
         var howTos = request.HowTos ?? [];
         var exerciseMuscles = request.ExerciseMuscles ?? [];
+        var trainingTypes = request.TrainingTypes ?? [];
 
         return new Exercise
         {
@@ -254,6 +299,12 @@ public sealed class ExercisesService(WorkoutLogDbContext dbContext) : IExercises
                 {
                     MuscleId = muscleIdByName[StorageTextNormalizer.NormalizeKey(x.MuscleName)],
                     IsPrimary = x.IsPrimary
+                })
+                .ToList(),
+            ExerciseTrainingTypes = trainingTypes
+                .Select(x => new ExerciseTrainingType
+                {
+                    TrainingTypeId = trainingTypeIdByName[StorageTextNormalizer.NormalizeKey(x)]
                 })
                 .ToList()
         };
@@ -285,5 +336,34 @@ public sealed class ExercisesService(WorkoutLogDbContext dbContext) : IExercises
             .ToList();
 
         return (muscleIdByName, missingMuscles);
+    }
+
+    private async Task<(Dictionary<string, int> TrainingTypeIdByName, List<string> MissingTrainingTypes)>
+        ResolveTrainingTypeIdsAsync(
+            IEnumerable<string> trainingTypeNames,
+            CancellationToken cancellationToken)
+    {
+        var normalizedTrainingTypeNames = trainingTypeNames
+            .Select(StorageTextNormalizer.NormalizeKey)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var trainingTypes = await dbContext.TrainingTypes
+            .AsNoTracking()
+            .Where(x => normalizedTrainingTypeNames.Contains(x.Name))
+            .Select(x => new
+            {
+                x.Id,
+                x.Name
+            })
+            .ToListAsync(cancellationToken);
+
+        var trainingTypeIdByName = trainingTypes.ToDictionary(x => x.Name, x => x.Id, StringComparer.OrdinalIgnoreCase);
+        var missingTrainingTypes = normalizedTrainingTypeNames
+            .Where(x => !trainingTypeIdByName.ContainsKey(x))
+            .OrderBy(x => x)
+            .ToList();
+
+        return (trainingTypeIdByName, missingTrainingTypes);
     }
 }

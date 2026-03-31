@@ -1,0 +1,33 @@
+meta {
+  name: Create Training Types Bulk (Admin)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/trainingtypes/bulk
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  [
+    {
+      "name": "strength"
+    },
+    {
+      "name": "hypertrophy"
+    },
+    {
+      "name": "conditioning"
+    }
+  ]
+}

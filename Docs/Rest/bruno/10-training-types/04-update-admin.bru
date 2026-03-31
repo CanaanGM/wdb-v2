@@ -1,0 +1,25 @@
+meta {
+  name: Update Training Type (Admin)
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/trainingtypes/{{trainingTypeId}}
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "name": "strength-endurance"
+  }
+}

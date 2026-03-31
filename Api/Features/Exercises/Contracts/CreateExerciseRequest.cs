@@ -22,8 +22,21 @@ public sealed class CreateExerciseRequest : IValidatableObject
     [MinLength(1)]
     public List<CreateExerciseMuscleRequest> ExerciseMuscles { get; set; } = [];
 
+    [Required]
+    public List<string> TrainingTypes { get; set; } = [];
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
+        var blankTrainingTypes = TrainingTypes
+            .Where(string.IsNullOrWhiteSpace)
+            .ToList();
+        if (blankTrainingTypes.Count > 0)
+        {
+            yield return new ValidationResult(
+                "trainingTypes cannot contain blank values.",
+                [nameof(TrainingTypes)]);
+        }
+
         var duplicateMuscleNames = ExerciseMuscles
             .Where(x => !string.IsNullOrWhiteSpace(x.MuscleName))
             .Select(x => x.MuscleName.Trim())
@@ -38,6 +51,22 @@ public sealed class CreateExerciseRequest : IValidatableObject
             yield return new ValidationResult(
                 $"Duplicate muscles in exercise: {string.Join(", ", duplicateMuscleNames)}.",
                 [nameof(ExerciseMuscles)]);
+        }
+
+        var duplicateTrainingTypes = TrainingTypes
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .GroupBy(x => x, StringComparer.InvariantCultureIgnoreCase)
+            .Where(x => x.Count() > 1)
+            .Select(x => x.Key)
+            .OrderBy(x => x)
+            .ToList();
+
+        if (duplicateTrainingTypes.Count > 0)
+        {
+            yield return new ValidationResult(
+                $"Duplicate training types in exercise: {string.Join(", ", duplicateTrainingTypes)}.",
+                [nameof(TrainingTypes)]);
         }
     }
 }

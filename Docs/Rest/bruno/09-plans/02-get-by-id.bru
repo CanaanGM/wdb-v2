@@ -1,0 +1,15 @@
+meta {
+  name: Get Plan By Id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/plans/{{planId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
