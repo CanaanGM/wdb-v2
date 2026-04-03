@@ -9,6 +9,11 @@ public static class StorageTextNormalizer
         return value.Trim().ToLower(CultureInfo.InvariantCulture);
     }
 
+    public static string NormalizeText(string value)
+    {
+        return value.Trim();
+    }
+
     public static string? NormalizeOptionalText(string? value)
     {
         return string.IsNullOrWhiteSpace(value)

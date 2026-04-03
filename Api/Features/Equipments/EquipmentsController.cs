@@ -1,5 +1,6 @@
 using Api.Features.Equipments.Commands.CreateEquipment;
 using Api.Features.Equipments.Commands.CreateEquipmentsBulk;
+using Api.Features.Equipments.Commands.DeleteEquipment;
 using Api.Features.Equipments.Contracts;
 using Api.Features.Equipments.Queries.GetAllEquipments;
 using Api.Features.Equipments.Queries.GetEquipmentByName;
@@ -106,5 +107,25 @@ public sealed class EquipmentsController(ISender sender) : ControllerBase
         {
             CreatedCount = result.CreatedCount
         });
+    }
+
+    [HttpDelete("{name}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(string name, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new DeleteEquipmentCommand(name), cancellationToken);
+        if (result.ResultType == DeleteEquipmentResultType.ValidationError)
+        {
+            return BadRequest(result.Error);
+        }
+
+        if (result.ResultType == DeleteEquipmentResultType.NotFound)
+        {
+            return NotFound(result.Error);
+        }
+
+        return NoContent();
     }
 }

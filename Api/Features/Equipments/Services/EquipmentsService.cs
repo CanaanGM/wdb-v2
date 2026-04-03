@@ -139,6 +139,35 @@ public sealed class EquipmentsService(WorkoutLogDbContext dbContext) : IEquipmen
         return CreateEquipmentsBulkResult.Success(entities.Count);
     }
 
+    public async Task<DeleteEquipmentResult> DeleteByNameAsync(string name, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return DeleteEquipmentResult.ValidationError("Equipment name is required.");
+        }
+
+        var normalizedName = StorageTextNormalizer.NormalizeKey(name);
+        if (string.IsNullOrWhiteSpace(normalizedName))
+        {
+            return DeleteEquipmentResult.ValidationError("Equipment name is required.");
+        }
+
+        var entity = await dbContext.Equipments
+            .Include(x => x.ExerciseEquipments)
+            .SingleOrDefaultAsync(x => x.Name == normalizedName, cancellationToken);
+
+        if (entity is null)
+        {
+            return DeleteEquipmentResult.NotFound($"Equipment with name '{normalizedName}' was not found.");
+        }
+
+        dbContext.ExerciseEquipments.RemoveRange(entity.ExerciseEquipments);
+        dbContext.Equipments.Remove(entity);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return DeleteEquipmentResult.Success();
+    }
+
     private static Expression<Func<Equipment, EquipmentResponse>> MapToResponseExpression()
     {
         return x => new EquipmentResponse

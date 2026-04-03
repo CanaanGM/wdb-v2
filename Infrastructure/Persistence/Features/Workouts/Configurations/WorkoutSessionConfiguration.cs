@@ -11,7 +11,6 @@ public sealed class WorkoutSessionConfiguration : IEntityTypeConfiguration<Worko
     {
         builder.ToTable("workout_session", x =>
         {
-            x.HasCheckConstraint("CK_workout_session_feeling_lowercase", "feeling = lower(feeling)");
             x.HasCheckConstraint("CK_workout_session_duration_non_negative", "duration_in_seconds >= 0");
             x.HasCheckConstraint("CK_workout_session_calories_non_negative", "calories >= 0");
             x.HasCheckConstraint("CK_workout_session_total_kg_non_negative", "total_kg_moved >= 0");

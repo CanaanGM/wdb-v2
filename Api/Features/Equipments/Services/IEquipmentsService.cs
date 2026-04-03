@@ -15,4 +15,6 @@ public interface IEquipmentsService
     Task<CreateEquipmentsBulkResult> CreateBulkAsync(
         List<CreateEquipmentRequest> requests,
         CancellationToken cancellationToken);
+
+    Task<DeleteEquipmentResult> DeleteByNameAsync(string name, CancellationToken cancellationToken);
 }

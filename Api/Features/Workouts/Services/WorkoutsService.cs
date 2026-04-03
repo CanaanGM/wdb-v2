@@ -95,7 +95,7 @@ public sealed class WorkoutsService(
         var workout = new WorkoutSession
         {
             UserId = userId,
-            Feeling = StorageTextNormalizer.NormalizeKey(request.Feeling),
+            Feeling = StorageTextNormalizer.NormalizeText(request.Feeling),
             Mood = request.Mood,
             Notes = StorageTextNormalizer.NormalizeOptionalText(request.Notes),
             DurationInSeconds = sessionMetrics.DurationInSeconds,
@@ -157,7 +157,7 @@ public sealed class WorkoutsService(
                 return new WorkoutSession
                 {
                     UserId = userId,
-                    Feeling = StorageTextNormalizer.NormalizeKey(request.Feeling),
+                    Feeling = StorageTextNormalizer.NormalizeText(request.Feeling),
                     Mood = request.Mood,
                     Notes = StorageTextNormalizer.NormalizeOptionalText(request.Notes),
                     DurationInSeconds = sessionMetrics.DurationInSeconds,
@@ -217,7 +217,7 @@ public sealed class WorkoutsService(
 
         var sessionMetrics = CalculateSessionMetrics(request.DurationInMinutes, request.Entries);
 
-        workout.Feeling = StorageTextNormalizer.NormalizeKey(request.Feeling);
+        workout.Feeling = StorageTextNormalizer.NormalizeText(request.Feeling);
         workout.Mood = request.Mood;
         workout.Notes = StorageTextNormalizer.NormalizeOptionalText(request.Notes);
         workout.PerformedAtUtc = request.PerformedAtUtc ?? workout.PerformedAtUtc;
@@ -336,7 +336,7 @@ public sealed class WorkoutsService(
         {
             DurationInSeconds = Math.Max(durationFromRequest, timerSeconds),
             Calories = entries.Sum(x => x.KcalBurned),
-            TotalKgMoved = entries.Sum(x => x.WeightUsedKg),
+            TotalKgMoved = entries.Sum(x => x.WeightUsedKg * x.Repetitions),
             TotalRepetitions = entries.Sum(x => x.Repetitions),
             AverageRateOfPerceivedExertion = entries.Count == 0
                 ? 0

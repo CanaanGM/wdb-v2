@@ -5,6 +5,7 @@
 ### Architecture (CQRS)
 
 - Controllers only handle HTTP concerns.
+- The `Api` project currently includes both transport and application orchestration concerns (contracts, CQRS wiring, feature services, MCP setup).
 - `Commands` mutate state, `Queries` read state.
 - Handlers delegate data/business logic to feature services.
 - CQRS is wired through MediatR (`ISender` + handlers) with shared primitives under `Api/Application/Cqrs`.
@@ -422,6 +423,13 @@ Invoke-RestMethod -Method Get `
 ```powershell
 # Get one equipment by unique name
 Invoke-RestMethod -Method Get `
+  -Uri "https://localhost:8081/api/equipments/barbell" `
+  -SkipCertificateCheck
+```
+
+```powershell
+# Delete one equipment by unique name
+Invoke-RestMethod -Method Delete `
   -Uri "https://localhost:8081/api/equipments/barbell" `
   -SkipCertificateCheck
 ```
