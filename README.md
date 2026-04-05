@@ -1,50 +1,198 @@
 # WorkoutLog
 
-## API
+WorkoutLog is a .NET API for tracking workouts, workout blocks, plans, measurements, auth, and supporting exercise catalog data.
 
-### Architecture (CQRS)
+## Contents
 
-- Controllers only handle HTTP concerns.
-- The `Api` project currently includes both transport and application orchestration concerns (contracts, CQRS wiring, feature services, MCP setup).
-- `Commands` mutate state, `Queries` read state.
-- Handlers delegate data/business logic to feature services.
-- CQRS is wired through MediatR (`ISender` + handlers) with shared primitives under `Api/Application/Cqrs`.
-- MediatR pipeline behaviors:
-  - command logging
-  - command transaction
-  - query logging
-- Input validation happens at the API boundary through request contract attributes.
-- Unhandled exceptions are returned as RFC7807 problem details with trace IDs.
+- [Quick Start](#quick-start)
+- [Local URLs](#local-urls)
+- [HTTPS Development Certificate](#https-development-certificate)
+- [Common Docker Tasks](#common-docker-tasks)
+- [Configuration Notes](#configuration-notes)
+- [REST And API Docs](#rest-and-api-docs)
+- [MCP And LM Studio](#mcp-and-lm-studio)
+- [Architecture](#architecture)
+- [Persistence Layout](#persistence-layout)
 
-### MCP Server
+## Quick Start
 
-- MCP endpoint is hosted by the API at `https://localhost:8081/mcp` (or `http://localhost:8080/mcp`).
-- Exposed read-only tools:
-  - `search_exercises`
-  - `get_exercise_by_id`
-  - `get_muscles`
-  - `search_muscles`
-  - `get_muscles_by_group`
-  - `get_equipments`
-  - `search_equipments`
-  - `get_equipment_by_name`
-  - `search_workouts`
-  - `get_workout_by_id`
-  - `search_workout_blocks`
-  - `get_workout_block_by_id`
-  - `search_user_exercise_stats`
+1. Create your local env file.
 
-### MCP Setup For LM Studio
+```bash
+cp .env.example .env
+```
 
-1. Start the API so the MCP endpoint is live:
+PowerShell alternative:
 
 ```powershell
+Copy-Item .env.example .env
+```
+
+2. Replace `AUTH_JWT_SECRET` in `.env` with your own long random secret.
+3. Create and trust the local HTTPS development certificate.
+4. Start PostgreSQL.
+
+```bash
+docker compose up -d database
+```
+
+5. Apply migrations.
+
+```bash
+docker compose --profile migrations run --rm --build migrator
+```
+
+6. Start the API.
+
+```bash
 docker compose up -d api
 ```
 
-2. In LM Studio, open `Program` -> `Install` -> `Edit mcp.json`.
+7. Use the API at `https://localhost:8081` or `http://localhost:8080`.
 
-3. Add this server entry (for local dev, use `http` to avoid cert trust issues):
+## Local URLs
+
+- Docker HTTP: `http://localhost:8080`
+- Docker HTTPS: `https://localhost:8081`
+- Rider / launch profile HTTP: `http://localhost:6000`
+- Rider / launch profile HTTPS: `https://localhost:6001`
+- MCP endpoint: `/mcp` on either host
+- OpenAPI JSON: `/openapi/v1.json` when the API is running in `Development` such as the Rider launch profiles
+
+## HTTPS Development Certificate
+
+The Docker API container reads the development certificate from `/https/workoutlog.pfx`.
+`docker compose` resolves the host-side certificate directory in this order:
+
+- `HTTPS_CERT_DIRECTORY`
+- `HOME`
+- `USERPROFILE`
+
+If your certificate lives somewhere else, set `HTTPS_CERT_DIRECTORY` before starting the API.
+
+### Windows (PowerShell)
+
+```powershell
+dotnet dev-certs https -ep "$env:USERPROFILE\.aspnet\https\workoutlog.pfx" -p "WorkoutLogDev!2026"
+dotnet dev-certs https --trust
+dotnet dev-certs https --check --trust
+```
+
+### Linux / CachyOS (zsh/bash)
+
+Install the trust helpers once:
+
+```bash
+sudo pacman -S --needed ca-certificates openssl nss
+```
+
+Create and trust the certificate:
+
+```bash
+mkdir -p "$HOME/.aspnet/https"
+dotnet dev-certs https --clean
+dotnet dev-certs https -ep "$HOME/.aspnet/https/workoutlog.pfx" -p "WorkoutLogDev!2026" --trust
+chmod 644 "$HOME/.aspnet/https/workoutlog.pfx"
+dotnet dev-certs https --check --trust
+```
+
+If `curl` or your browser still does not trust the cert, add this to `~/.zshrc` or `~/.bashrc` and open a new shell:
+
+```bash
+export SSL_CERT_DIR="$HOME/.aspnet/dev-certs/trust:/etc/ssl/certs"
+```
+
+### Certificate Troubleshooting
+
+Permission denied on `/https/workoutlog.pfx`:
+
+```bash
+chmod 644 "$HOME/.aspnet/https/workoutlog.pfx"
+```
+
+Password mismatch for `workoutlog.pfx`:
+
+```bash
+dotnet dev-certs https -ep "$HOME/.aspnet/https/workoutlog.pfx" -p "WorkoutLogDev!2026"
+chmod 644 "$HOME/.aspnet/https/workoutlog.pfx"
+```
+
+## Common Docker Tasks
+
+Apply current migrations:
+
+```bash
+docker compose --profile migrations run --rm --build migrator
+```
+
+Roll back all migrations to `0`:
+
+```bash
+docker compose --profile migrations run --rm --build migrator-down
+```
+
+Add a new migration:
+
+```bash
+docker compose --profile migrations run --rm --build migrator migrations add <MigrationName> --project Infrastructure/Infrastructure.csproj --startup-project Api/Api.csproj --output-dir Persistence/Migrations
+```
+
+Reset the local database from scratch:
+
+```bash
+docker compose --profile migrations run --rm --build migrator-down
+docker compose down -v
+docker compose up -d database
+docker compose --profile migrations run --rm --build migrator
+```
+
+Stop the stack:
+
+```bash
+docker compose down
+```
+
+## Configuration Notes
+
+- `.env.example` is the canonical list of local environment variables.
+- `AUTH_JWT_SECRET` must be replaced before startup. The placeholder value fails fast in every environment, including `Development`.
+- `AUTH_PASSWORD_RESET_INCLUDE_DEBUG_TOKEN=true` only affects forgot-password responses when the API is running in `Development`.
+- `USER_EXERCISE_STATS_MAINTENANCE_RECOMPUTE_ALL_ON_STARTUP=true` triggers a one-time full user exercise stats rebuild on startup. Set it back to `false` after the rebuild completes.
+
+## REST And API Docs
+
+- REST collections overview: [Docs/Rest/README.md](Docs/Rest/README.md)
+- PowerShell smoke-test examples: [Docs/Rest/PowerShell-Examples.md](Docs/Rest/PowerShell-Examples.md)
+- Bruno collection: `Docs/Rest/bruno`
+- Postman collection: `Docs/Rest/workoutlog.postman_collection.json`
+
+The root README intentionally stays focused on setup and navigation now. Use the REST docs for request examples and endpoint smoke tests.
+
+## MCP And LM Studio
+
+The API hosts an MCP endpoint at `https://localhost:8081/mcp` or `http://localhost:8080/mcp`.
+
+Exposed read-only tools:
+
+- `search_exercises`
+- `get_exercise_by_id`
+- `get_muscles`
+- `search_muscles`
+- `get_muscles_by_group`
+- `get_equipments`
+- `search_equipments`
+- `get_equipment_by_name`
+- `search_workouts`
+- `get_workout_by_id`
+- `search_workout_blocks`
+- `get_workout_block_by_id`
+- `search_user_exercise_stats`
+
+LM Studio setup:
+
+1. Start the API.
+2. Open `Program -> Install -> Edit mcp.json`.
+3. Add this server entry for local dev:
 
 ```json
 {
@@ -56,941 +204,22 @@ docker compose up -d api
 }
 ```
 
-4. Save `mcp.json`, then reload MCP servers (or restart LM Studio).
-
-5. In the chat/tool UI, enable the `workoutlog` server and use tools like:
-   - `search_exercises`
-   - `get_exercise_by_id`
-   - `get_muscles`
-   - `search_muscles`
-   - `get_muscles_by_group`
-   - `get_equipments`
-   - `search_equipments`
-   - `get_equipment_by_name`
-   - `search_workouts` (Development-only, requires `userId` input)
-   - `get_workout_by_id` (Development-only, requires `userId` input)
-   - `search_workout_blocks` (Development-only, requires `userId` input)
-   - `get_workout_block_by_id` (Development-only, requires `userId` input)
-   - `search_user_exercise_stats` (Development-only, requires `userId` input)
-
-### Persistence Layout
-
-- Feature-based persistence config lives under:
-  - `Infrastructure/Persistence/Features/Auth/Configurations`
-  - `Infrastructure/Persistence/Features/Equipments/Configurations`
-  - `Infrastructure/Persistence/Features/Exercises/Configurations`
-  - `Infrastructure/Persistence/Features/Muscles/Configurations`
-  - `Infrastructure/Persistence/Features/Plans/Configurations`
-  - `Infrastructure/Persistence/Features/WorkoutBlocks/Configurations`
-  - `Infrastructure/Persistence/Features/Workouts/Configurations`
-- Shared cross-feature persistence code (if needed) lives under:
-  - `Infrastructure/Persistence/Shared`
-- Migrations remain under:
-  - `Infrastructure/Persistence/Migrations`
-
-### HTTPS development certificate (PowerShell)
-
-Run these commands on each development machine:
-
-```powershell
-dotnet dev-certs https -ep "$env:USERPROFILE\.aspnet\https\workoutlog.pfx" -p "WorkoutLogDev!2026"
-dotnet dev-certs https --trust
-```
-
-### Run EF migrations in Docker (PowerShell)
-
-```powershell
-Copy-Item .env.example .env
-docker compose up -d database
-docker compose --profile migrations run --rm --build migrator
-```
-
-```powershell
-docker compose --profile migrations run --rm --build migrator-down
-```
-
-```powershell
-docker compose --profile migrations run --rm --build migrator migrations add <MigrationName> --project Infrastructure/Infrastructure.csproj --startup-project Api/Api.csproj --output-dir Persistence/Migrations
-```
-
-### Reset DB schema safely (PowerShell)
-
-```powershell
-# roll back all EF migrations to 0
-docker compose --profile migrations run --rm --build migrator-down
-
-# apply current migration set from scratch
-docker compose --profile migrations run --rm --build migrator
-```
-
-```powershell
-# optional hard reset: remove postgres volume data too
-docker compose down -v
-docker compose up -d database
-docker compose --profile migrations run --rm --build migrator
-```
-
-### Full local Docker flow (PowerShell)
-
-```powershell
-# first-time setup (or when env changes)
-Copy-Item .env.example .env -Force
-
-# start database
-docker compose up -d database
-
-# apply migrations
-docker compose --profile migrations run --rm --build migrator
-
-# start API
-docker compose up -d api
-```
-
-```powershell
-# stop everything
-docker compose down
-```
-
-### Auth environment variables
-
-- `AUTH_JWT_ISSUER`
-- `AUTH_JWT_AUDIENCE`
-- `AUTH_JWT_SECRET`
-- `AUTH_JWT_ACCESS_TOKEN_MINUTES`
-- `AUTH_REFRESH_COOKIE_NAME`
-- `AUTH_REFRESH_DAYS`
-- `AUTH_REFRESH_COOKIE_PATH`
-- `AUTH_PASSWORD_RESET_INCLUDE_DEBUG_TOKEN`
-- `AUTH_BOOTSTRAP_ADMIN_ENABLED`
-- `AUTH_BOOTSTRAP_ADMIN_EMAIL`
-- `AUTH_BOOTSTRAP_ADMIN_USERNAME`
-- `AUTH_BOOTSTRAP_ADMIN_PASSWORD`
-- `USER_EXERCISE_STATS_MAINTENANCE_RECOMPUTE_ALL_ON_STARTUP`
-
-`AUTH_JWT_SECRET` must be replaced with a strong custom value. The API will fail startup in all environments (including Development) if the placeholder value is still used.
-
-Set `USER_EXERCISE_STATS_MAINTENANCE_RECOMPUTE_ALL_ON_STARTUP=true` for a one-time full user exercise stats rebuild at startup, then set it back to `false`.
-
-### Auth API quick test (PowerShell)
-
-```powershell
-$session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
-
-# Register
-$registerBody = @'
-{
-  "username": "demo.user",
-  "email": "demo.user@example.com",
-  "password": "DemoPass123"
-}
-'@
-
-$registerResponse = Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/auth/register" `
-  -SkipCertificateCheck `
-  -WebSession $session `
-  -ContentType "application/json" `
-  -Body $registerBody
-```
-
-```powershell
-# Login (identifier can be email or username)
-$loginBody = @'
-{
-  "identifier": "demo.user@example.com",
-  "password": "DemoPass123"
-}
-'@
-
-$loginResponse = Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/auth/login" `
-  -SkipCertificateCheck `
-  -WebSession $session `
-  -ContentType "application/json" `
-  -Body $loginBody
-```
-
-```powershell
-# Me (requires bearer access token)
-Invoke-RestMethod -Method Get `
-  -Uri "https://localhost:8081/api/auth/me" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $($loginResponse.accessToken)" }
-```
-
-```powershell
-# Refresh access token (uses HttpOnly refresh cookie from $session)
-$refreshResponse = Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/auth/refresh" `
-  -SkipCertificateCheck `
-  -WebSession $session
-```
-
-```powershell
-# Forgot password (debugResetToken is returned only when BOTH conditions are true:
-# 1) ASPNETCORE_ENVIRONMENT=Development
-# 2) AUTH_PASSWORD_RESET_INCLUDE_DEBUG_TOKEN=true)
-$forgotBody = @'
-{
-  "identifier": "demo.user@example.com"
-}
-'@
-
-$forgotResponse = Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/auth/forgot-password" `
-  -SkipCertificateCheck `
-  -ContentType "application/json" `
-  -Body $forgotBody
-```
-
-```powershell
-# Reset password (use token from forgotResponse.debugResetToken)
-$resetBody = @{
-  identifier = "demo.user@example.com"
-  token = $forgotResponse.debugResetToken
-  newPassword = "DemoPass456"
-} | ConvertTo-Json
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/auth/reset-password" `
-  -SkipCertificateCheck `
-  -ContentType "application/json" `
-  -Body $resetBody
-```
-
-```powershell
-# Logout (revokes refresh cookie token)
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/auth/logout" `
-  -SkipCertificateCheck `
-  -WebSession $session
-```
-
-### Muscle API quick test (PowerShell)
-
-```powershell
-# Create muscles first (required before exercise creation)
-$musclesBody = @'
-[
-  {
-    "name": "Gastrocnemius",
-    "muscleGroup": "calves",
-    "function": "Plantar flexes the ankle and flexes the knee.",
-    "wikiPageUrl": "https://en.wikipedia.org/wiki/Gastrocnemius_muscle"
-  },
-  {
-    "name": "Rectus Femoris",
-    "muscleGroup": "quadriceps",
-    "function": "Flexes the hip and extends the knee.",
-    "wikiPageUrl": "https://en.wikipedia.org/wiki/Rectus_femoris_muscle"
-  }
-]
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/muscles/bulk" `
-  -SkipCertificateCheck `
-  -ContentType "application/json" `
-  -Body $musclesBody
-```
-
-```powershell
-# Get all muscles
-Invoke-RestMethod -Method Get `
-  -Uri "https://localhost:8081/api/muscles" `
-  -SkipCertificateCheck
-```
-
-### Exercise API quick test (PowerShell)
-
-```powershell
-# requires existing muscles
-$body = @{
-  name = "Push-up"
-  description = "Upper body exercise"
-  howTo = "Keep your core tight and lower until elbows hit ~90 degrees."
-  difficulty = 2
-  trainingTypes = @("strength", "hypertrophy")
-  exerciseMuscles = @(
-    @{ muscleName = "Gastrocnemius"; isPrimary = $false }
-  )
-  howTos = @(
-    @{ name = "Video"; url = "https://example.com/push-up-video" },
-    @{ name = "Written guide"; url = "https://example.com/push-up-guide" }
-  )
-} | ConvertTo-Json -Depth 6
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/exercises" `
-  -SkipCertificateCheck `
-  -ContentType "application/json" `
-  -Body $body
-```
-
-```powershell
-# Search exercises (paged + filtered) via body
-# body fields:
-# - pageNumber (>=1)
-# - pageSize (1..100)
-# - search (name/description contains)
-# - difficulty (0..5)
-# - trainingTypeName
-# - muscleName
-# - muscleGroup
-# - isPrimary (true/false)
-$searchBody = @{
-  pageNumber = 1
-  pageSize = 20
-  search = "squat"
-  difficulty = 3
-  trainingTypeName = "strength"
-  muscleGroup = "quadriceps"
-  isPrimary = $true
-} | ConvertTo-Json -Depth 4
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/exercises/search" `
-  -SkipCertificateCheck `
-  -ContentType "application/json" `
-  -Body $searchBody
-```
-
-```powershell
-# Get one exercise by id
-Invoke-RestMethod -Method Get `
-  -Uri "https://localhost:8081/api/exercises/1" `
-  -SkipCertificateCheck
-```
-
-### Equipment API quick test (PowerShell)
-
-```powershell
-# Create one equipment
-$equipmentBody = @'
-{
-  "name": "barbell",
-  "description": "Standard olympic barbell.",
-  "howTo": "Use collars before loading plates.",
-  "weightKg": 20
-}
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/equipments" `
-  -SkipCertificateCheck `
-  -ContentType "application/json" `
-  -Body $equipmentBody
-```
-
-```powershell
-# Bulk create equipments
-$equipmentBulkBody = @'
-[
-  {
-    "name": "dumbbell",
-    "description": "Single-hand free weight.",
-    "weightKg": 12.5
-  },
-  {
-    "name": "kettlebell",
-    "description": "Ballistic training weight.",
-    "weightKg": 16
-  }
-]
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/equipments/bulk" `
-  -SkipCertificateCheck `
-  -ContentType "application/json" `
-  -Body $equipmentBulkBody
-```
-
-```powershell
-# Get all equipments
-Invoke-RestMethod -Method Get `
-  -Uri "https://localhost:8081/api/equipments" `
-  -SkipCertificateCheck
-```
-
-```powershell
-# Search equipments by term
-Invoke-RestMethod -Method Get `
-  -Uri "https://localhost:8081/api/equipments/search/bell" `
-  -SkipCertificateCheck
-```
-
-```powershell
-# Get one equipment by unique name
-Invoke-RestMethod -Method Get `
-  -Uri "https://localhost:8081/api/equipments/barbell" `
-  -SkipCertificateCheck
-```
-
-```powershell
-# Delete one equipment by unique name
-Invoke-RestMethod -Method Delete `
-  -Uri "https://localhost:8081/api/equipments/barbell" `
-  -SkipCertificateCheck
-```
-
-```powershell
-# Bulk create exercises (extra legacy fields are ignored if sent)
-$bulkBody = @'
-[
-  {
-    "name": "Rope Jumping",
-    "description": "Cardio rope exercise.",
-    "howTo": "Jump rope with small controlled hops.",
-    "difficulty": 2,
-    "trainingTypes": ["Cardiovascular"],
-    "exerciseMuscles": [{ "muscleName": "Gastrocnemius", "isPrimary": true }],
-    "howTos": [{ "name": "youtube", "url": "https://example.com/rope-jump" }]
-  },
-  {
-    "name": "High Bar Squat",
-    "description": "Squat with high bar placement.",
-    "howTo": "Keep torso upright and drive through mid-foot.",
-    "difficulty": 3,
-    "exerciseMuscles": [{ "muscleName": "Rectus Femoris", "isPrimary": true }],
-    "howTos": []
-  }
-]
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/exercises/bulk" `
-  -SkipCertificateCheck `
-  -ContentType "application/json" `
-  -Body $bulkBody
-```
-
-### Workout API quick test (PowerShell)
-
-```powershell
-# requires a bearer token from /api/auth/login
-$token = $loginResponse.accessToken
-```
-
-```powershell
-# Create one workout
-$createWorkoutBody = @'
-{
-  "feeling": "great",
-  "durationInMinutes": 75,
-  "mood": 8,
-  "notes": "push day",
-  "performedAtUtc": "2026-03-30T18:45:00Z",
-  "entries": [
-    {
-      "exerciseId": 1,
-      "orderNumber": 1,
-      "repetitions": 12,
-      "mood": 8,
-      "weightUsedKg": 60,
-      "rateOfPerceivedExertion": 7,
-      "kcalBurned": 55
-    }
-  ]
-}
-'@
-
-$createdWorkout = Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/workouts" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" } `
-  -ContentType "application/json" `
-  -Body $createWorkoutBody
-```
-
-```powershell
-# Search workouts (paged)
-$searchWorkoutsBody = @'
-{
-  "pageNumber": 1,
-  "pageSize": 20,
-  "search": "push",
-  "minMood": 6,
-  "maxMood": 10
-}
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/workouts/search" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" } `
-  -ContentType "application/json" `
-  -Body $searchWorkoutsBody
-```
-
-```powershell
-# Get recent workouts (last 48 hours)
-Invoke-RestMethod -Method Get `
-  -Uri "https://localhost:8081/api/workouts/recent?hours=48" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" }
-```
-
-```powershell
-# Bulk create workouts
-$bulkWorkoutsBody = @'
-[
-  {
-    "feeling": "good",
-    "durationInMinutes": 45,
-    "mood": 7,
-    "entries": [
-      {
-        "exerciseId": 1,
-        "orderNumber": 1,
-        "repetitions": 10,
-        "mood": 7,
-        "weightUsedKg": 50,
-        "rateOfPerceivedExertion": 6,
-        "kcalBurned": 40
-      }
-    ]
-  },
-  {
-    "feeling": "cardio",
-    "durationInMinutes": 30,
-    "mood": 6,
-    "entries": [
-      {
-        "exerciseId": 2,
-        "orderNumber": 1,
-        "timerInSeconds": 1200,
-        "mood": 6,
-        "weightUsedKg": 0,
-        "rateOfPerceivedExertion": 5,
-        "kcalBurned": 120
-      }
-    ]
-  }
-]
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/workouts/bulk" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" } `
-  -ContentType "application/json" `
-  -Body $bulkWorkoutsBody
-```
-
-```powershell
-# Update a workout (replace payload)
-$updateWorkoutBody = @'
-{
-  "feeling": "solid",
-  "durationInMinutes": 80,
-  "mood": 9,
-  "notes": "updated",
-  "entries": [
-    {
-      "exerciseId": 1,
-      "orderNumber": 1,
-      "repetitions": 15,
-      "mood": 9,
-      "weightUsedKg": 62.5,
-      "rateOfPerceivedExertion": 8,
-      "kcalBurned": 60
-    }
-  ]
-}
-'@
-
-Invoke-RestMethod -Method Put `
-  -Uri "https://localhost:8081/api/workouts/$($createdWorkout.id)" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" } `
-  -ContentType "application/json" `
-  -Body $updateWorkoutBody
-```
-
-```powershell
-# Delete workout
-Invoke-RestMethod -Method Delete `
-  -Uri "https://localhost:8081/api/workouts/$($createdWorkout.id)" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" }
-```
-
-### Workout Blocks API quick test (PowerShell)
-
-```powershell
-# Create workout block
-$createBlockBody = @'
-{
-  "name": "upper strength block",
-  "sets": 4,
-  "restInSeconds": 90,
-  "orderNumber": 1,
-  "instructions": "controlled tempo",
-  "blockExercises": [
-    {
-      "exerciseId": 1,
-      "orderNumber": 1,
-      "repetitions": 8
-    },
-    {
-      "exerciseId": 2,
-      "orderNumber": 2,
-      "repetitions": 10
-    }
-  ]
-}
-'@
-
-$createdBlock = Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/workoutblocks" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" } `
-  -ContentType "application/json" `
-  -Body $createBlockBody
-```
-
-```powershell
-# Search workout blocks
-$searchBlocksBody = @'
-{
-  "pageNumber": 1,
-  "pageSize": 20,
-  "search": "upper"
-}
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/workoutblocks/search" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" } `
-  -ContentType "application/json" `
-  -Body $searchBlocksBody
-```
-
-```powershell
-# Bulk create workout blocks
-$bulkBlocksBody = @'
-[
-  {
-    "name": "lower block",
-    "sets": 3,
-    "restInSeconds": 120,
-    "orderNumber": 1,
-    "blockExercises": [
-      { "exerciseId": 1, "orderNumber": 1, "repetitions": 12 }
-    ]
-  },
-  {
-    "name": "conditioning block",
-    "sets": 5,
-    "restInSeconds": 60,
-    "orderNumber": 2,
-    "blockExercises": [
-      { "exerciseId": 2, "orderNumber": 1, "timerInSeconds": 300 }
-    ]
-  }
-]
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/workoutblocks/bulk" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" } `
-  -ContentType "application/json" `
-  -Body $bulkBlocksBody
-```
-
-```powershell
-# Delete workout block
-Invoke-RestMethod -Method Delete `
-  -Uri "https://localhost:8081/api/workoutblocks/$($createdBlock.id)" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" }
-```
-
-### Plans API quick test (PowerShell)
-
-```powershell
-# Search published plans
-$searchPlansBody = @'
-{
-  "status": "published",
-  "search": "savage",
-  "pageNumber": 1,
-  "pageSize": 20
-}
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/plans/search" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" } `
-  -ContentType "application/json" `
-  -Body $searchPlansBody
-```
-
-```powershell
-# Get plan by id
-Invoke-RestMethod -Method Get `
-  -Uri "https://localhost:8081/api/plans/1" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" }
-```
-
-```powershell
-# Admin: create one plan
-$createPlanBody = @'
-{
-  "slug": "savage",
-  "name": "Savage",
-  "description": "4-week hypertrophy block",
-  "durationWeeks": 4,
-  "days": [
-    {
-      "weekNumber": 1,
-      "dayNumber": 1,
-      "title": "Push Day",
-      "exercises": [
-        {
-          "exerciseId": 1,
-          "orderNumber": 1,
-          "sets": 4,
-          "repetitions": 8,
-          "targetRateOfPerceivedExertion": 8,
-          "targetWeightKg": 40,
-          "restInSeconds": 120
-        }
-      ]
-    }
-  ]
-}
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/plans" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" } `
-  -ContentType "application/json" `
-  -Body $createPlanBody
-```
-
-```powershell
-# Admin: bulk create plans
-$bulkPlansBody = @'
-[
-  {
-    "slug": "savage",
-    "name": "Savage",
-    "durationWeeks": 4,
-    "days": [
-      {
-        "weekNumber": 1,
-        "dayNumber": 1,
-        "exercises": [
-          { "exerciseId": 1, "orderNumber": 1, "sets": 4, "repetitions": 8 }
-        ]
-      }
-    ]
-  },
-  {
-    "slug": "elite",
-    "name": "Elite",
-    "durationWeeks": 6,
-    "days": [
-      {
-        "weekNumber": 1,
-        "dayNumber": 1,
-        "exercises": [
-          { "exerciseId": 1, "orderNumber": 1, "sets": 5, "repetitions": 5 }
-        ]
-      }
-    ]
-  }
-]
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/plans/bulk" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" } `
-  -ContentType "application/json" `
-  -Body $bulkPlansBody
-```
-
-```powershell
-# Admin: bulk add exercises to a specific plan day
-$bulkDayExercisesBody = @'
-[
-  {
-    "exerciseId": 1,
-    "orderNumber": 10,
-    "sets": 3,
-    "repetitions": 12,
-    "targetRateOfPerceivedExertion": 7
-  },
-  {
-    "exerciseId": 2,
-    "orderNumber": 11,
-    "sets": 4,
-    "repetitions": 10,
-    "targetRateOfPerceivedExertion": 8
-  }
-]
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/plans/1/weeks/1/days/1/exercises/bulk" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" } `
-  -ContentType "application/json" `
-  -Body $bulkDayExercisesBody
-```
-
-```powershell
-# Enroll current user in plan
-$enrollBody = @'
-{
-  "startedAtUtc": "2026-04-01T06:00:00Z",
-  "timeZoneId": "Asia/Amman"
-}
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/plans/1/enroll" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" } `
-  -ContentType "application/json" `
-  -Body $enrollBody
-```
-
-```powershell
-# Search my enrollments
-$searchEnrollmentsBody = @'
-{
-  "status": "active",
-  "pageNumber": 1,
-  "pageSize": 20
-}
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/myplans/enrollments/search" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" } `
-  -ContentType "application/json" `
-  -Body $searchEnrollmentsBody
-```
-
-```powershell
-# Search my agenda
-$searchAgendaBody = @'
-{
-  "fromLocalDate": "2026-04-01",
-  "toLocalDate": "2026-04-14"
-}
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/myplans/agenda/search" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" } `
-  -ContentType "application/json" `
-  -Body $searchAgendaBody
-```
-
-### User Exercise Stats API quick test (PowerShell)
-
-```powershell
-# Search user exercise stats (GET query variant)
-Invoke-RestMethod -Method Get `
-  -Uri "https://localhost:8081/api/userexercisestats?pageNumber=1&pageSize=20&search=squat&exerciseId=1" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" }
-```
-
-```powershell
-# Search user exercise stats
-$searchStatsBody = @'
-{
-  "pageNumber": 1,
-  "pageSize": 20,
-  "search": "squat"
-}
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/userexercisestats/search" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" } `
-  -ContentType "application/json" `
-  -Body $searchStatsBody
-```
-
-```powershell
-# Get stat by exercise id
-Invoke-RestMethod -Method Get `
-  -Uri "https://localhost:8081/api/userexercisestats/1" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" }
-```
-
-### Training Types API quick test (PowerShell)
-
-```powershell
-# Get all training types
-Invoke-RestMethod -Method Get `
-  -Uri "https://localhost:8081/api/trainingtypes" `
-  -SkipCertificateCheck
-```
-
-```powershell
-# Bulk create training types (admin token required)
-$bulkTypesBody = @'
-[
-  { "name": "strength" },
-  { "name": "hypertrophy" },
-  { "name": "conditioning" }
-]
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/trainingtypes/bulk" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $adminToken" } `
-  -ContentType "application/json" `
-  -Body $bulkTypesBody
-```
-
-### Measurements API quick test (PowerShell)
-
-```powershell
-# Create measurement
-$measurementBody = @'
-{
-  "hip": 95,
-  "chest": 102,
-  "waistOnBelly": 88,
-  "waistUnderBelly": 82,
-  "minerals": 3.5,
-  "protein": 12.8,
-  "totalBodyWater": 40.2,
-  "bodyFatMass": 18.7
-}
-'@
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:8081/api/measurements" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" } `
-  -ContentType "application/json" `
-  -Body $measurementBody
-```
-
-```powershell
-# Get my measurements
-Invoke-RestMethod -Method Get `
-  -Uri "https://localhost:8081/api/measurements" `
-  -SkipCertificateCheck `
-  -Headers @{ Authorization = "Bearer $token" }
-```
+4. Reload MCP servers or restart LM Studio.
+5. Enable the `workoutlog` server in the tool UI.
+
+## Architecture
+
+- Controllers only handle HTTP concerns.
+- The `Api` project currently contains transport and application orchestration concerns.
+- Commands mutate state and queries read state.
+- Handlers delegate business and persistence work to feature services.
+- CQRS is wired through MediatR with shared primitives under `Api/Application/Cqrs`.
+- Pipeline behaviors currently cover command logging, command transactions, and query logging.
+- Input validation happens at the API boundary through request contract attributes.
+- Unhandled exceptions are returned as RFC7807 problem details with trace IDs.
+
+## Persistence Layout
+
+- Feature-based EF configuration lives under `Infrastructure/Persistence/Features/*/Configurations`.
+- Shared persistence code belongs under `Infrastructure/Persistence/Shared`.
+- EF migrations live under `Infrastructure/Persistence/Migrations`.

@@ -91,7 +91,7 @@ services:
       - "${API_HTTPS_PORT:-8081}:443"
     volumes:
       - type: bind
-        source: "${USERPROFILE}/.aspnet/https"
+        source: "${HTTPS_CERT_DIRECTORY:-${HOME:-${USERPROFILE}}/.aspnet/https}"
         target: /https
         read_only: true
 

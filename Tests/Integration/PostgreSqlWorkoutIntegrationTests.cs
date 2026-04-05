@@ -91,6 +91,7 @@ public sealed class PostgreSqlFixture : IAsyncLifetime
 
         throw SkipException.ForSkip($"PostgreSQL testcontainer is unavailable: {_startException.Message}");
     }
+
 }
 
 [Collection(IntegrationTestCollections.PostgreSql)]

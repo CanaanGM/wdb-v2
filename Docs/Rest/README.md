@@ -1,18 +1,25 @@
-# REST Collections
+# REST Docs
 
+This directory contains the REST collections and smoke-test examples for local API work.
+
+## Quick Links
+
+- PowerShell smoke tests: [PowerShell-Examples.md](PowerShell-Examples.md)
+- Bruno collection: `Docs/Rest/bruno`
 - Postman collection: `Docs/Rest/workoutlog.postman_collection.json`
-- Bruno collection folder: `Docs/Rest/bruno`
+
+## Local Base URLs
+
+- Docker HTTPS: `https://localhost:8081`
+- Docker HTTP: `http://localhost:8080`
+- Rider / launch profile HTTPS: `https://localhost:6001`
+- Rider / launch profile HTTP: `http://localhost:6000`
+- OpenAPI JSON: `/openapi/v1.json` when the API is running in `Development`, for example through Rider
 
 ## Notes
 
-- Default base URL is `https://localhost:6001`.
-- For authenticated endpoints, set `accessToken` after login/register/refresh.
-- Postman requests for register/login/refresh include a test script that stores `accessToken` automatically.
-- Bruno now includes:
-  - `07-user-exercise-stats/03-search-query-get.bru` for GET-based stat search.
-  - `09-plans/*` for full plans + enrollment + agenda + execution flow.
-  - `09-plans/12-create-bulk-admin.bru` for plan bulk create.
-  - `09-plans/13-create-day-exercises-bulk-admin.bru` for bulk plan-day exercises.
-  - `10-training-types/*` for training type CRUD + bulk creation.
-  - `11-measurements/*` for authenticated measurement CRUD.
-  - `04-exercises/*` updated with `trainingTypes` support and `trainingTypeName` filtering.
+- Use Bruno or Postman for full endpoint coverage.
+- Use the PowerShell document for quick local smoke tests without importing a collection.
+- For authenticated endpoints, store the returned `accessToken` after login, register, or refresh.
+- Refresh and logout flows rely on the HTTP-only refresh cookie, so PowerShell examples use a `WebRequestSession`.
+- `debugResetToken` is only returned when `ASPNETCORE_ENVIRONMENT=Development` and `AUTH_PASSWORD_RESET_INCLUDE_DEBUG_TOKEN=true`.

@@ -11,6 +11,7 @@ using Api.Features.TrainingTypes;
 using Api.Features.WorkoutBlocks;
 using Api.Features.Workouts;
 using Api.Features.Measurements;
+using Api.Features.Sync;
 using Api.Features.UserExerciseStats;
 using Infrastructure;
 
@@ -56,6 +57,7 @@ builder.Services.AddExerciseFeature();
 builder.Services.AddMuscleFeature();
 builder.Services.AddTrainingTypesFeature();
 builder.Services.AddMeasurementsFeature();
+builder.Services.AddSyncFeature();
 builder.Services.AddPlansFeature();
 builder.Services.AddUserExerciseStatsFeature(builder.Configuration);
 builder.Services.AddWorkoutBlockFeature();

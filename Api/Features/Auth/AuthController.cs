@@ -22,10 +22,8 @@ public sealed class AuthController(
     ISender sender,
     ICurrentUserAccessor currentUserAccessor,
     IHostEnvironment hostEnvironment,
-    IOptions<RefreshTokenOptions> refreshTokenOptions,
     IOptions<PasswordResetOptions> passwordResetOptions) : ControllerBase
 {
-    private readonly RefreshTokenOptions _refreshTokenOptions = refreshTokenOptions.Value;
     private readonly PasswordResetOptions _passwordResetOptions = passwordResetOptions.Value;
 
     [HttpPost("register")]
@@ -56,31 +54,35 @@ public sealed class AuthController(
     [HttpPost("refresh")]
     [AllowAnonymous]
     [ProducesResponseType<AuthResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<AuthResponse>> Refresh(CancellationToken cancellationToken)
+    public async Task<ActionResult<AuthResponse>> Refresh(
+        [FromBody] RefreshRequest request,
+        CancellationToken cancellationToken)
     {
-        if (!Request.Cookies.TryGetValue(_refreshTokenOptions.CookieName, out var refreshToken)
-            || string.IsNullOrWhiteSpace(refreshToken))
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
         {
-            return Unauthorized("Refresh token is missing.");
+            return BadRequest("Refresh token is missing.");
         }
 
-        var result = await sender.Send(new RefreshCommand(refreshToken), cancellationToken);
+        var result = await sender.Send(new RefreshCommand(request.RefreshToken), cancellationToken);
         return ToAuthActionResult(result);
     }
 
     [HttpPost("logout")]
     [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> Logout(CancellationToken cancellationToken)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Logout(
+        [FromBody] LogoutRequest request,
+        CancellationToken cancellationToken)
     {
-        if (Request.Cookies.TryGetValue(_refreshTokenOptions.CookieName, out var refreshToken)
-            && !string.IsNullOrWhiteSpace(refreshToken))
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
         {
-            await sender.Send(new LogoutCommand(refreshToken), cancellationToken);
+            return BadRequest("Refresh token is missing.");
         }
 
-        DeleteRefreshCookie();
+        await sender.Send(new LogoutCommand(request.RefreshToken), cancellationToken);
         return NoContent();
     }
 
@@ -155,7 +157,6 @@ public sealed class AuthController(
 
         if (result.ResultType == AuthCommandResultType.Unauthorized)
         {
-            DeleteRefreshCookie();
             return Unauthorized(result.Error);
         }
 
@@ -164,35 +165,8 @@ public sealed class AuthController(
             return StatusCode(StatusCodes.Status500InternalServerError, "Authentication operation failed.");
         }
 
-        SetRefreshCookie(result.RefreshToken);
+        result.Response.RefreshToken = result.RefreshToken.Token;
+        result.Response.RefreshTokenExpiresAtUtc = result.RefreshToken.ExpiresAtUtc;
         return Ok(result.Response);
-    }
-
-    private void SetRefreshCookie(RefreshTokenEnvelope refreshToken)
-    {
-        Response.Cookies.Append(
-            _refreshTokenOptions.CookieName,
-            refreshToken.Token,
-            new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Path = _refreshTokenOptions.CookiePath,
-                Expires = new DateTimeOffset(refreshToken.ExpiresAtUtc)
-            });
-    }
-
-    private void DeleteRefreshCookie()
-    {
-        Response.Cookies.Delete(
-            _refreshTokenOptions.CookieName,
-            new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Path = _refreshTokenOptions.CookiePath
-            });
     }
 }
